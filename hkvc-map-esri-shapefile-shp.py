@@ -10,6 +10,8 @@ import sys
 import turtle
 import random
 
+DO_COLOR_RANDOM=False
+
 SHAPEFILE_CODE = 9994
 SHAPETYPES = { 0: "NullShape", 1: "Point", 3: "PolyLine", 5: "Polygon", 8: "MultiPoint", 11: "PointZ", 13: "PolyLineZ", 15: "PolygonZ", 
 		18: "MultiPointZ", 21: "PointM", 23: "PolyLineM", 25: "PolygonM", 28: "MultiPointM", 31: "MultiPatch" }
@@ -17,6 +19,11 @@ SHAPETYPES = { 0: "NullShape", 1: "Point", 3: "PolyLine", 5: "Polygon", 8: "Mult
 gFileLength = 0
 
 gTr = None
+
+
+def plot_adjust_xy(x,y):
+	return (x*3, y*3)
+
 
 def shp_read_fileheader(f):
 	global gFileLength
@@ -69,6 +76,17 @@ def shp_read_records(f):
 		print(SHAPETYPES[rShapeType])
 		if (rShapeType == 5):
 			shp_read_polygon(rContentData)
+		if (rShapeType == 1):
+			shp_read_point(rContentData)
+
+
+def shp_read_point(data):
+	pRec = struct.unpack("<i2d",data)
+	(pShapeType, pX, pY) = pRec
+	print(pRec)
+	cPoint = plot_adjust_xy(pX,pY)
+	gTr.goto(cPoint[0],cPoint[1])
+	gTr.dot()
 
 
 def shp_read_polygon(data):
@@ -99,14 +117,17 @@ def shp_read_polygon(data):
 		cPoint = struct.unpack_from("<2d", polyPointsArrayData, i*16)
 		print(cPoint)
 		#gTr.goto(cPoint)
-		gTr.goto(cPoint[0]*3,cPoint[1]*3)
+		cPoint = plot_adjust_xy(cPoint[0],cPoint[1])
+		gTr.goto(cPoint[0],cPoint[1])
 		if (i == cPointStart):
-			gTr.color((random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)))
-			gTr.begin_fill()
+			if (DO_COLOR_RANDOM):
+				gTr.color((random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)))
+				gTr.begin_fill()
 			gTr.pendown()
 		if (i == cPointEnd):
 			gTr.penup()
-			gTr.end_fill()
+			if (DO_COLOR_RANDOM):
+				gTr.end_fill()
 			cPoly = cPoly+1
 			(cPointStart, cPointEnd) = shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
 
@@ -131,20 +152,24 @@ def main():
 	gTr.speed(0)
 	gTr.hideturtle()
 	gTr.colormode(255)
-	gTr.penup()
-	f=open(sys.argv[1],"rb")
-	shp_read_fileheader(f)
-	try:
-		shp_read_records(f)
-	except:
-		print(sys.exc_info())
-		if (gFileLength == f.tell()):
-			print("INFO: Seems like End of File![{}]".format(f.tell()))
-		else:
-			print("WARN: Unexpected FileLocation?[{}]".format(f.tell()))
+	for i in range(1,len(sys.argv)+1):
+		gTr.penup()
+		f=open(sys.argv[i],"rb")
+		shp_read_fileheader(f)
+		try:
+			shp_read_records(f)
+		except:
+			print(sys.exc_info())
+			if (gFileLength == f.tell()):
+				print("INFO: Seems like End of File![{}]".format(f.tell()))
+			else:
+				print("WARN: Unexpected FileLocation?[{}]".format(f.tell()))
 
-	f.close()
+		f.close()
+		#input("INFO: Shapefile[{}] processed...".format(sys.argv[i]))
 	
 
 main()
+input("Hope the shapefile was plotted well...")
+input("Hope the shapefile was plotted well...")
 input("Hope the shapefile was plotted well...")
