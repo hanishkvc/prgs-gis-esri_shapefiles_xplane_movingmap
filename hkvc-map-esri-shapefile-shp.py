@@ -83,8 +83,8 @@ def shp_read_records(f):
 def shp_read_point(data):
 	pRec = struct.unpack("<i2d",data)
 	(pShapeType, pX, pY) = pRec
-	print(pRec)
 	cPoint = plot_adjust_xy(pX,pY)
+	print("pRec={}, cPointAdjusted={}".format(pRec,cPoint))
 	gTr.goto(cPoint[0],cPoint[1])
 	gTr.dot()
 
@@ -110,7 +110,7 @@ def shp_read_polygon(data):
 		exit()
 	polyPointsArrayData = data[polyPointsArrayStart:polyPointsArrayEnd]
 
-	#NOTE: FIXME: This is a simple temp logic which ignores about multiple Polygons within a single Polygon shape record content
+	#NOTE: FIXED: This is a simple temp logic which ignores about multiple Polygons within a single Polygon shape record content
 	cPoly = 0
 	(cPointStart, cPointEnd) = shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
 	for i in range(0,pNumPoints):
@@ -152,7 +152,7 @@ def main():
 	gTr.speed(0)
 	gTr.hideturtle()
 	gTr.colormode(255)
-	for i in range(1,len(sys.argv)+1):
+	for i in range(1,len(sys.argv)):
 		gTr.penup()
 		f=open(sys.argv[i],"rb")
 		shp_read_fileheader(f)
@@ -170,6 +170,4 @@ def main():
 	
 
 main()
-input("Hope the shapefile was plotted well...")
-input("Hope the shapefile was plotted well...")
 input("Hope the shapefile was plotted well...")
