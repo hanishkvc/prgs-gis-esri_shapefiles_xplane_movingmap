@@ -8,6 +8,7 @@
 import struct
 import sys
 import turtle
+import random
 
 SHAPEFILE_CODE = 9994
 SHAPETYPES = { 0: "NullShape", 1: "Point", 3: "PolyLine", 5: "Polygon", 8: "MultiPoint", 11: "PointZ", 13: "PolyLineZ", 15: "PolygonZ", 
@@ -100,9 +101,12 @@ def shp_read_polygon(data):
 		#gTr.goto(cPoint)
 		gTr.goto(cPoint[0]*3,cPoint[1]*3)
 		if (i == cPointStart):
+			gTr.color((random.randint(0,255),random.randint(0,255),random.randint(0,255)),(random.randint(0,255),random.randint(0,255),random.randint(0,255)))
+			gTr.begin_fill()
 			gTr.pendown()
 		if (i == cPointEnd):
 			gTr.penup()
+			gTr.end_fill()
 			cPoly = cPoly+1
 			(cPointStart, cPointEnd) = shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
 
@@ -124,6 +128,9 @@ def shp_poly_startend(polyStartPointIndexesArray, curPoly, numPolys, numPoints):
 def main():
 	global gTr
 	gTr = turtle
+	gTr.speed(0)
+	gTr.hideturtle()
+	gTr.colormode(255)
 	gTr.penup()
 	f=open(sys.argv[1],"rb")
 	shp_read_fileheader(f)
