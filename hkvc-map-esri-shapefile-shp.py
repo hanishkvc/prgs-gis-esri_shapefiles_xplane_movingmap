@@ -7,12 +7,9 @@
 
 import struct
 import sys
-import turtle
 import random
-import cairo
+import hkvc_plotter
 
-PLOT_TURTLE=True
-PLOT_CAIRO=True
 DO_COLOR_RANDOM=True
 
 SHAPEFILE_CODE = 9994
@@ -22,10 +19,9 @@ SHAPETYPES = { 0: "NullShape", 1: "Point", 3: "PolyLine", 5: "Polygon", 8: "Mult
 gFileLength = 0
 
 gTr = None
-gCr = None
 
-PLOT_SCALE_X=20
-PLOT_SCALE_Y=20
+PLOT_SCALE_X=30
+PLOT_SCALE_Y=30
 
 def plot_dimension():
 	return (180*2*PLOT_SCALE_X, 90*2*PLOT_SCALE_Y)
@@ -92,14 +88,9 @@ def shp_read_records(f):
 def shp_read_point(data):
 	pRec = struct.unpack("<i2d",data)
 	(pShapeType, pX, pY) = pRec
-	cPoint = plot_adjust_xy(pX,pY)
+	cPoint = (pX, pY)
 	print("pRec={}, cPointAdjusted={}".format(pRec,cPoint))
-	if (PLOT_TURTLE):
-		gTr.goto(cPoint[0],cPoint[1])
-		gTr.dot()
-	if (PLOT_CAIRO):
-		gCr.rectangle(cPoint[0],cPoint[1],1,1)
-		gCr.stroke()
+	gTr.dot(cPoint[0],cPoint[1])
 
 
 def shp_read_polygon(data):
@@ -129,42 +120,24 @@ def shp_read_polygon(data):
 	for i in range(0,pNumPoints):
 		cPoint = struct.unpack_from("<2d", polyPointsArrayData, i*16)
 		#print(cPoint)
-		cPoint = plot_adjust_xy(cPoint[0],cPoint[1])
 		if (i == cPointStart):
 			clrR = random.randint(0,255)
 			clrG = random.randint(0,255)
 			clrB = random.randint(0,255)
 			print(clrR,clrG,clrB)
-			if (PLOT_TURTLE):
-				if (DO_COLOR_RANDOM):
-					gTr.color((random.randint(0,255),random.randint(0,255),random.randint(0,255)), (clrR,clrG,clrB))
-					gTr.begin_fill()
-				gTr.penup() # ensures that irrespective of previous state of plotting, the following goto acts like move_to
-				gTr.goto(cPoint[0],cPoint[1])
-				gTr.pendown()
-			if (PLOT_CAIRO):
-				if (DO_COLOR_RANDOM):
-					gCr.set_source_rgb(clrR/255,clrG/255,clrB/255)
-				gCr.move_to(cPoint[0],cPoint[1])
+			if (DO_COLOR_RANDOM):
+				gTr.color(clrR,clrG,clrB)
+			gTr.move_to(cPoint[0],cPoint[1])
 		elif (i == cPointEnd):
-			if (PLOT_TURTLE):
-				gTr.goto(cPoint[0],cPoint[1])
-				gTr.penup()
-				if (DO_COLOR_RANDOM):
-					gTr.end_fill()
-			if (PLOT_CAIRO):
-				gCr.line_to(cPoint[0],cPoint[1])
-				if (DO_COLOR_RANDOM):
-					gCr.fill()
-				else:
-					gCr.stroke()
+			gTr.line_to(cPoint[0],cPoint[1])
+			if (DO_COLOR_RANDOM):
+				gTr.fill()
+			else:
+				gTr.stroke()
 			cPoly = cPoly+1
 			(cPointStart, cPointEnd) = shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
 		else:
-			if (PLOT_TURTLE):
-				gTr.goto(cPoint[0],cPoint[1])
-			if (PLOT_CAIRO):
-				gCr.line_to(cPoint[0],cPoint[1])
+			gTr.line_to(cPoint[0],cPoint[1])
 
 
 def shp_poly_startend(polyStartPointIndexesArray, curPoly, numPolys, numPoints):
@@ -181,21 +154,12 @@ def shp_poly_startend(polyStartPointIndexesArray, curPoly, numPolys, numPoints):
 
 
 def main():
-	global gTr, gCr
-	if (PLOT_TURTLE):
-		gTr = turtle
-		gTr.speed(0)
-		gTr.hideturtle()
-		gTr.colormode(255)
-	if (PLOT_CAIRO):
-		gXWidth, gYHeight = plot_dimension()
-		crSurface = cairo.SVGSurface("/tmp/t100.svg",gXWidth,gYHeight)
-		gCr = cairo.Context(crSurface)
-		gCr.transform(cairo.Matrix(1,0,0,-1,gXWidth/2,gYHeight/2))
-		gCr.set_source_rgb(0,0,50)
-	for i in range(1,len(sys.argv)):
-		if (PLOT_TURTLE):
-			gTr.penup()
+	global gTr
+	if (sys.argv[1] == "turtle"):
+		gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",360,180,4,4)
+	else:
+		gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,4,4)
+	for i in range(2,len(sys.argv)):
 		f=open(sys.argv[i],"rb")
 		shp_read_fileheader(f)
 		try:
@@ -209,9 +173,7 @@ def main():
 
 		f.close()
 		#input("INFO: Shapefile[{}] processed...".format(sys.argv[i]))
-	if (PLOT_CAIRO):
-		crSurface.flush()
-		crSurface.finish()
+	gTr.flush()
 
 main()
 input("Hope the shapefile was plotted well...")
