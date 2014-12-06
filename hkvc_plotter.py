@@ -67,8 +67,8 @@ class PlotterCairo:
 		# Temporarily I can switch to a identity matrix for the text plotting 
 		# so that Text gets drawn properly independent of the transformation
 		# being used for plotting other things
+		self.cr.set_source_rgb(0.02,0.02,0.02)
 		savedMatrix = self.cr.get_matrix()
-		#self.cr.set_matrix(cairo.Matrix())
 		self.cr.identity_matrix()
 		self.cr.show_text(sText)
 		self.cr.set_matrix(savedMatrix)
