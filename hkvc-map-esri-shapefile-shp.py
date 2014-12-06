@@ -9,6 +9,7 @@ import struct
 import sys
 import random
 import hkvc_plotter
+import hkvc_map_esri_shapefile_dbf
 
 DO_COLOR_RANDOM=True
 
@@ -19,6 +20,7 @@ SHAPETYPES = { 0: "NullShape", 1: "Point", 3: "PolyLine", 5: "Polygon", 8: "Mult
 gFileLength = 0
 
 gTr = None
+gDbf = None
 
 PLOT_SCALE_X=30
 PLOT_SCALE_Y=30
@@ -70,6 +72,7 @@ def shp_read_fileheader(f):
 
 
 def shp_read_records(f):
+	recIndex = 0
 	while True:
 		rHdrData = f.read(8)
 		(recNum, recContentLength) = struct.unpack(">2i",rHdrData)
@@ -80,20 +83,23 @@ def shp_read_records(f):
 		rShapeType = int.from_bytes(rShapeType,'little')
 		print(SHAPETYPES[rShapeType])
 		if (rShapeType == 5):
-			shp_read_polygon(rContentData)
+			shp_read_polygon(recIndex, rContentData)
 		if (rShapeType == 1):
-			shp_read_point(rContentData)
+			shp_read_point(recIndex, rContentData)
+		recIndex += 1
 
 
-def shp_read_point(data):
+def shp_read_point(recIndex, data):
 	pRec = struct.unpack("<i2d",data)
 	(pShapeType, pX, pY) = pRec
 	cPoint = (pX, pY)
 	print("pRec={}, cPointAdjusted={}".format(pRec,cPoint))
 	gTr.dot(cPoint[0],cPoint[1])
+	txt=gDbf.dbf_read_record_field_str(recIndex,"NAME")
+	gTr.text(pX, pY, txt)
 
 
-def shp_read_polygon(data):
+def shp_read_polygon(recIndex, data):
 	# Each polygon shape record contains multiple polygons whose vertices are stored serially one after the other
 	hdrPolygonData = data[0:44]
 	hdrPolygon = struct.unpack("<i4d2i",hdrPolygonData)
@@ -155,13 +161,18 @@ def shp_poly_startend(polyStartPointIndexesArray, curPoly, numPolys, numPoints):
 
 def main():
 	global gTr
+	global gDbf
 	if (sys.argv[1] == "turtle"):
 		gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",360,180,4,4)
 	else:
-		gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,4,4)
+		gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,20,20)
+	#gTr.textfont("Courier 10 Pitch", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD,20)
+	gDbf = hkvc_map_esri_shapefile_dbf.DbfParser()
+
 	for i in range(2,len(sys.argv)):
-		f=open(sys.argv[i],"rb")
+		f=open(sys.argv[i]+".shp","rb")
 		shp_read_fileheader(f)
+		gDbf.dbf_load(sys.argv[i]+".dbf")
 		try:
 			shp_read_records(f)
 		except:
@@ -172,6 +183,7 @@ def main():
 				print("WARN: Unexpected FileLocation?[{}]".format(f.tell()))
 
 		f.close()
+		gDbf.dbf_close()
 		#input("INFO: Shapefile[{}] processed...".format(sys.argv[i]))
 	gTr.flush()
 
