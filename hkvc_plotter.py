@@ -48,11 +48,20 @@ class PlotterCairo:
 		self.cr.rectangle(x, y, 1, 1)
 		self.stroke()
 
+	def textfont(self, fontName, slant, weight, size):
+		self.cr.select_font_face(fontName, slant, weight)
+		self.cr.set_font_size(size)
+
 	def text(self, x, y, sText):
 		x, y = self.scale(x, y)
-		self.cr.select_font_face("Courier 10 Pitch", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-		self.cr.set_font_size(20)
 		xBearing, yBearing, tWidth, tHeight = self.cr.text_extents(sText)[:4]
+		x1 = x-(tWidth/2)-xBearing-2
+		y1 = y-(tHeight/2)-yBearing-4
+		self.cr.save()
+		self.cr.set_source_rgba(0.8,0.8,0.8,0.5)
+		self.cr.rectangle(x1,y1,tWidth+4,tHeight+4)
+		self.cr.fill()
+		self.cr.restore()
 		self.cr.move_to((x-(tWidth/2)),(y-(tHeight/2)-yBearing))
 		# Save the Plotting related Transformation matrix so that
 		# Temporarily I can switch to a identity matrix for the text plotting 
@@ -108,6 +117,9 @@ class PlotterTurtle:
 	def dot(self, x, y):
 		self.move_to(x, y)
 		self.tr.dot()
+
+	def textfont(self, fontName, slant, weight, size):
+		pass
 
 	def text(self, x, y, sText):
 		self.move_to(x,y)
