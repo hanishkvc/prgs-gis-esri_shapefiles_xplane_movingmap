@@ -17,8 +17,6 @@ class PlotterCairo:
 	def __init__(self, fileName, width, height, scaleX=1, scaleY=1):
 		self.scaleX = scaleX
 		self.scaleY = scaleY
-		#self.width = width * scaleX
-		#self.height = height * scaleY
 		self.width, self.height = self.scale(width, height)
 		self.crSurface = cairo.SVGSurface(fileName, self.width, self.height)
 		self.cr = cairo.Context(self.crSurface)
@@ -36,8 +34,6 @@ class PlotterCairo:
 		self.cr.move_to(x, y)
 
 	def line_to(self, x, y):
-		#x *= self.scaleX
-		#y *= self.scaleY
 		x, y = self.scale(x, y)
 		self.cr.line_to(x, y)
 
@@ -51,6 +47,22 @@ class PlotterCairo:
 		x, y = self.scale(x, y)
 		self.cr.rectangle(x, y, 1, 1)
 		self.stroke()
+
+	def text(self, x, y, sText):
+		x, y = self.scale(x, y)
+		self.cr.select_font_face("Courier 10 Pitch", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+		self.cr.set_font_size(20)
+		xBearing, yBearing, tWidth, tHeight = self.cr.text_extents(sText)[:4]
+		self.cr.move_to((x-(tWidth/2)),(y-(tHeight/2)-yBearing))
+		# Save the Plotting related Transformation matrix so that
+		# Temporarily I can switch to a identity matrix for the text plotting 
+		# so that Text gets drawn properly independent of the transformation
+		# being used for plotting other things
+		savedMatrix = self.cr.get_matrix()
+		#self.cr.set_matrix(cairo.Matrix())
+		self.cr.identity_matrix()
+		self.cr.show_text(sText)
+		self.cr.set_matrix(savedMatrix)
 
 	def flush(self):
 		self.crSurface.flush()
@@ -97,6 +109,10 @@ class PlotterTurtle:
 		self.move_to(x, y)
 		self.tr.dot()
 
+	def text(self, x, y, sText):
+		self.move_to(x,y)
+		self.tr.write(sText)
+
 	def flush(self):
 		pass
 
@@ -118,6 +134,9 @@ if __name__ == "__main__":
 	PCr.color(255, 0, 0)
 	PTr.dot(-200, -200)
 	PCr.dot(-200, -200)
+
+	PTr.text(0, 0, "Hello world long long long")
+	PCr.text(0, 0, "Hello world long long long")
 
 	PTr.flush()
 	PCr.flush()
