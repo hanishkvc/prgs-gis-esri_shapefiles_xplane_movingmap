@@ -21,6 +21,36 @@ import tkinter
 #   Positive Y is towards Top
 #
 
+
+class PlotterGeneric:
+
+	def __init__(self, plotArea, dataArea):
+		(pX1, pY1, pX2, pY2) = plotArea
+		(dX1, dY1, dX2, dY2) = dataArea
+		print("plotArea:[{}]\ndataArea:[{}]\n".format(plotArea, dataArea))
+		pXRange = pX2-pX1
+		pYRange = pY2-pY1
+		dXRange = dX2-dX1
+		dYRange = dY2-dY1
+		self.pXMid = pX1+pXRange/2
+		self.pYMid = pY1+pYRange/2
+		self.dXMid = dX1+dXRange/2
+		self.dYMid = dY1+dYRange/2
+		# 100 = 200
+		# dXRange = pXRange
+		# 50 =
+		# A = ?
+		self.xP2DRatio = pXRange/dXRange
+		self.yP2DRatio = pYRange/dYRange
+		#return pXMid, pYMid, dXMid, dYMid, xP2DRatio, yP2DRatio
+
+	def dataArea2plotArea(self, dX, dY):
+		#pX = dX*xP2DRatio+(pXMid-dXMid)
+		pX = self.pXMid+(dX-self.dXMid)*self.xP2DRatio
+		pY = self.pYMid+(dY-self.dYMid)*self.yP2DRatio
+		return pX,pY
+
+
 class PlotterCairo:
 
 	def __init__(self, fileName, width, height, scaleX=1, scaleY=1):
@@ -249,4 +279,21 @@ if __name__ == "__main__":
 	PLT.flush()
 
 	input("Hope the test went smoothly...")
+
+	while True:
+		mode=input("SpecifyMode[1,2,quit]:")
+		if (mode == "1"):
+			PLT = PlotterGeneric((0,0,1000,1000),(100,100,200,200))
+		elif (mode == "2"):
+			PLT = PlotterGeneric((0,0,1000,1000),(-100,100,-200,200))
+		else:
+			break
+		try:
+			while True:
+				dX = int(input("Enter DataX:"))
+				pX,pY = PLT.dataArea2plotArea(dX,0)
+				print("DataX[{}] = PlotX[{}]".format(dX, pX))
+		except:
+			print(sys.exc_info())
+			pass
 
