@@ -27,23 +27,28 @@ class PlotterCairo:
 		self.scaleX = scaleX
 		self.scaleY = scaleY
 		self.width, self.height = self.scale(width, height)
+		self.transX = self.width/2
+		self.transY = self.height/2
+		#Not mirroring along X axis by making self.scaleY negative, 
+		#  because the cairo transform is setup for doing the same
 		self.crSurface = cairo.SVGSurface(fileName, self.width, self.height)
 		self.cr = cairo.Context(self.crSurface)
-		self.cr.transform(cairo.Matrix(1, 0, 0, -1, self.width/2, self.height/2))
+		self.cr.transform(cairo.Matrix(scaleX, 0, 0, -1*scaleY, self.width/2, self.height/2))
 		self.cr.set_source_rgb(0, 0, 0)
 
 	def scale(self, x, y):
 		return x*self.scaleX, y*self.scaleY
 
+	def transform_xy(self, x, y):
+		return x*self.scaleX+self.transX, y*self.scaleY+self.transY
+
 	def color(self, r, g, b):
 		self.cr.set_source_rgb(r/255, g/255, b/255)
 
 	def move_to(self, x, y):
-		x, y = self.scale(x, y)
 		self.cr.move_to(x, y)
 
 	def line_to(self, x, y):
-		x, y = self.scale(x, y)
 		self.cr.line_to(x, y)
 
 	def stroke(self):
@@ -52,10 +57,14 @@ class PlotterCairo:
 	def fill(self):
 		self.cr.fill()
 
-	def dot(self, x, y):
+	def dot(self, x, y, size=1):
 		x, y = self.scale(x, y)
-		self.cr.rectangle(x, y, 1, 1)
+		self.cr.save()
+		self.cr.identity_matrix()
+		self.cr.transform(cairo.Matrix(1, 0, 0, -1, self.width/2, self.height/2))
+		self.cr.rectangle(x, y, size, size)
 		self.stroke()
+		self.cr.restore()
 
 	def textfont(self, fontName, slant, weight, size):
 		self.cr.select_font_face(fontName, slant, weight)
@@ -68,9 +77,11 @@ class PlotterCairo:
 		y1 = y-(tHeight/2)-yBearing-4
 		self.cr.save()
 		self.cr.set_source_rgba(0.8,0.8,0.8,0.5)
-		self.cr.rectangle(x1,y1,tWidth+4,tHeight+4)
+		self.cr.identity_matrix()
+		self.cr.transform(cairo.Matrix(1, 0, 0, -1, self.width/2, self.height/2))
+		self.cr.rectangle(x1,y1,(tWidth+4),(tHeight+4))
+		#self.cr.rectangle(x1,y1,(tWidth+4)/self.scaleX,(tHeight+4)/self.scaleY)
 		self.cr.fill()
-		self.cr.restore()
 		self.cr.move_to((x-(tWidth/2)),(y-(tHeight/2)-yBearing))
 		# Save the Plotting related Transformation matrix so that
 		# Temporarily I can switch to a identity matrix for the text plotting 
@@ -81,6 +92,7 @@ class PlotterCairo:
 		self.cr.identity_matrix()
 		self.cr.show_text(sText)
 		self.cr.set_matrix(savedMatrix)
+		self.cr.restore()
 
 	def flush(self):
 		self.crSurface.flush()
@@ -88,9 +100,16 @@ class PlotterCairo:
 
 class PlotterTurtle:
 
+	# Note As the Turtle graphics already has the Origin at the Center
+	# of the plot area, there is no need for explicit translation to
+	# achieve the same. so transX, transY = 0, 0
+	# Similarly no need to mirror along X axis i.e make scaleY negative
+	# because the Turtle graphics already has Positve Y towards Top
 	def __init__(self, fileName, width, height, scaleX=1, scaleY=1):
 		self.scaleX = scaleX
 		self.scaleY = scaleY
+		self.transX = 0
+		self.transY = 0
 		self.tr = turtle
 		#self.tr.speed(0)
 		#self.tr.hideturtle()
@@ -100,18 +119,21 @@ class PlotterTurtle:
 	def scale(self, x, y):
 		return x*self.scaleX, y*self.scaleY
 
+	def transform_xy(self, x, y):
+		return x*self.scaleX+self.transX, y*self.scaleY+self.transY
+
 	def color(self, r, g, b):
 		self.tr.color((r, g, b), (r, g, b))
 
 	def move_to(self, x, y):
-		x, y = self.scale(x, y)
+		x, y = self.transform_xy(x, y)
 		self.tr.begin_fill()
 		self.tr.penup()
 		self.tr.goto(x, y)
 		self.tr.pendown()
 
 	def line_to(self, x, y):
-		x, y = self.scale(x, y)
+		x, y = self.transform_xy(x, y)
 		self.tr.pendown()
 		self.tr.goto(x, y)
 		self.tr.penup()
@@ -123,7 +145,7 @@ class PlotterTurtle:
 		self.tr.end_fill()
 		pass
 
-	def dot(self, x, y):
+	def dot(self, x, y, size=1):
 		self.move_to(x, y)
 		self.tr.dot()
 
@@ -219,10 +241,10 @@ if __name__ == "__main__":
 
 	PLT.color(255, 0, 255)
 	PLT.dot(-120, -120, 10)
-	PLT.dot(0, 0, 10)
 
 	PLT.color(0, 0, 255)
 	PLT.text(0, 0, "Hello world long long long")
+	PLT.dot(0, 0, 10)
 
 	PLT.flush()
 
