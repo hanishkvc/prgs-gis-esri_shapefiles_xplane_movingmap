@@ -163,7 +163,9 @@ def main():
 	global gTr
 	global gDbf
 	if (sys.argv[1] == "turtle"):
-		gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",360,180,4,4)
+		gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",360,180,3,3)
+	elif (sys.argv[1] == "tk"):
+		gTr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",360,180,3,3)
 	else:
 		gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,20,20)
 	#gTr.textfont("Courier 10 Pitch", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD,20)
@@ -181,6 +183,7 @@ def main():
 				print("INFO: Seems like End of File![{}]".format(f.tell()))
 			else:
 				print("WARN: Unexpected FileLocation?[{}]".format(f.tell()))
+				input("CHECK: Hope above is fine...")
 
 		f.close()
 		gDbf.dbf_close()

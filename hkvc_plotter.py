@@ -11,6 +11,15 @@
 
 import cairo
 import turtle
+import tkinter
+
+#
+# These PlotterClasses are setup such that by default
+# * 0,0 (origin) is at the center of the image/plot area specified with
+#   the width and height arguments (after scaling is applied)
+# * Positive X is towards Right
+#   Positive Y is towards Top
+#
 
 class PlotterCairo:
 
@@ -128,30 +137,94 @@ class PlotterTurtle:
 	def flush(self):
 		pass
 
+class PlotterTk:
+
+	def __init__(self, fileName, width, height, scaleX=1, scaleY=1):
+		self.scaleX = scaleX
+		self.scaleY = scaleY
+		#self.width = width * self.scaleX
+		#self.height = height * self.scaleY
+		self.width, self.height = self.scale(width, height)
+		self.transX = self.width/2
+		self.transY = self.height/2
+		self.troot = tkinter.Tk()
+		self.tframe = tkinter.Frame(self.troot)
+		self.tframe.pack()
+		self.cnvs = tkinter.Canvas(self.tframe,width=self.width,height=self.height)
+		self.cnvs.pack()
+		self.scaleY = scaleY*-1
+		self.sColor = "#000000"
+
+	def scale(self, x, y):
+		return x*self.scaleX, y*self.scaleY
+
+	def transform_xy(self, x, y):
+		return x*self.scaleX+self.transX, y*self.scaleY+self.transY
+
+	def color(self, r, g, b):
+		print("Color:{}{}{} = {:02X}{:02X}{:02X}".format(r,g,b,r,g,b))
+		self.sColor = "#{:02X}{:02X}{:02X}".format(r,g,b)
+		#self.cnvs.tk_setPalette(foreground=self.sColor, background="#FFFFFF")
+		pass
+
+	def move_to(self, x, y):
+		x, y = self.transform_xy(x, y)
+		self.path = list()
+		self.path.append((x,y))
+
+	def line_to(self, x, y):
+		x, y = self.transform_xy(x, y)
+		self.path.append((x,y))
+
+	def stroke(self):
+		self.cnvs.create_line(self.path, fill=self.sColor)
+
+	def fill(self):
+		self.cnvs.create_polygon(self.path, fill=self.sColor)
+
+	def dot(self, x, y, size=2):
+		x, y = self.transform_xy(x, y)
+		self.cnvs.create_oval(x, y, x+size, y+size, fill=self.sColor)
+
+	def textfont(self, fontName, slant, weight, size):
+		pass
+
+	def text(self, x, y, sText):
+		x, y = self.transform_xy(x, y)
+		self.cnvs.create_text(x, y, text=sText, fill=self.sColor)
+
+	def flush(self):
+		pass
+
 
 if __name__ == "__main__":
-	PTr = PlotterTurtle("/tmp/turtle.test.dummy", 500, 500, 2, 2)
-	PCr = PlotterCairo("/tmp/cairo.test.svg", 500, 500, 2, 2)
+	import sys
+	if (sys.argv[1] == "turtle"):
+		PLT = PlotterTurtle("/tmp/PltTurtle.test.dummy", 400, 300, 2, 2)
+	elif (sys.argv[1] == "tk"):
+		PLT = PlotterTk("/tmp/PltTk.test.dummy", 400, 300, 2, 2)
+	else:
+		PLT = PlotterCairo("/tmp/PltCairo.test.svg", 400, 300, 2, 2)
 
-	PTr.move_to(0, 0)
-	PCr.move_to(0, 0)
-	PTr.line_to(200, 0)
-	PCr.line_to(200, 0)
-	PTr.line_to(200, 200)
-	PCr.line_to(200, 200)
-	PTr.stroke()
-	PCr.stroke()
+	PLT.move_to(0, 0)
+	PLT.line_to(200, 0)
+	PLT.line_to(200, 200)
+	PLT.stroke()
 
-	PTr.color(255, 0, 0)
-	PCr.color(255, 0, 0)
-	PTr.dot(-200, -200)
-	PCr.dot(-200, -200)
+	PLT.color(0,255,0)
+	PLT.move_to(50, 50)
+	PLT.line_to(100, 50)
+	PLT.line_to(50, 100)
+	PLT.fill()
 
-	PTr.text(0, 0, "Hello world long long long")
-	PCr.text(0, 0, "Hello world long long long")
+	PLT.color(255, 0, 255)
+	PLT.dot(-120, -120, 10)
+	PLT.dot(0, 0, 10)
 
-	PTr.flush()
-	PCr.flush()
+	PLT.color(0, 0, 255)
+	PLT.text(0, 0, "Hello world long long long")
+
+	PLT.flush()
 
 	input("Hope the test went smoothly...")
 
