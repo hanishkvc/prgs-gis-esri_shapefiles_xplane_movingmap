@@ -17,11 +17,10 @@ SHAPEFILE_CODE = 9994
 SHAPETYPES = { 0: "NullShape", 1: "Point", 3: "PolyLine", 5: "Polygon", 8: "MultiPoint", 11: "PointZ", 13: "PolyLineZ", 15: "PolygonZ", 
 		18: "MultiPointZ", 21: "PointM", 23: "PolyLineM", 25: "PolygonM", 28: "MultiPointM", 31: "MultiPatch" }
 
-gTr = None
-
 class SHPHandler:
 
-	def __init__(self):
+	def __init__(self, plotter):
+		self.plotter = plotter
 		self.dbfParser = hkvc_map_esri_shapefile_dbf.DbfParser()
 
 	def setup(self,fileBaseName):
@@ -94,9 +93,9 @@ class SHPHandler:
 		(pShapeType, pX, pY) = pRec
 		cPoint = (pX, pY)
 		print("pRec={}, cPointAdjusted={}".format(pRec,cPoint))
-		gTr.dot(cPoint[0],cPoint[1])
+		self.plotter.dot(cPoint[0],cPoint[1])
 		txt=self.dbfParser.dbf_read_record_field_str(recIndex,"NAME")
-		gTr.text(pX, pY, txt)
+		self.plotter.text(pX, pY, txt)
 
 
 	def shp_read_polygon(self, recIndex, data):
@@ -132,18 +131,18 @@ class SHPHandler:
 				clrB = random.randint(0,255)
 				print(clrR,clrG,clrB)
 				if (DO_COLOR_RANDOM):
-					gTr.color(clrR,clrG,clrB)
-				gTr.move_to(cPoint[0],cPoint[1])
+					self.plotter.color(clrR,clrG,clrB)
+				self.plotter.move_to(cPoint[0],cPoint[1])
 			elif (i == cPointEnd):
-				gTr.line_to(cPoint[0],cPoint[1])
+				self.plotter.line_to(cPoint[0],cPoint[1])
 				if (DO_COLOR_RANDOM):
-					gTr.fill()
+					self.plotter.fill()
 				else:
-					gTr.stroke()
+					self.plotter.stroke()
 				cPoly = cPoly+1
 				(cPointStart, cPointEnd) = self.shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
 			else:
-				gTr.line_to(cPoint[0],cPoint[1])
+				self.plotter.line_to(cPoint[0],cPoint[1])
 
 
 	def shp_poly_startend(self, polyStartPointIndexesArray, curPoly, numPolys, numPoints):
@@ -160,19 +159,18 @@ class SHPHandler:
 
 if __name__ == "__main__":
 	
-	global gTr
 	if (sys.argv[1] == "turtle"):
-		#gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",360,180,3,3)
-		gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",(-180,90,180,-90),plotArea=(-540,270,540,-270))
+		#pltr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",360,180,3,3)
+		pltr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",(-180,90,180,-90),plotArea=(-540,270,540,-270))
 	elif (sys.argv[1] == "tk"):
-		#gTr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",360,180,3,3)
-		gTr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",(-180,90,180,-90),plotArea=(0,0,1080,540))
+		#pltr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",360,180,3,3)
+		pltr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",(-180,90,180,-90),plotArea=(0,0,1080,540))
 	else:
-		#gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,20,20)
-		gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",(-180,90,180,-90),plotArea=(0,0,360*10,180*10))
-	#gTr.textfont("Courier 10 Pitch", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD,20)
+		#pltr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,20,20)
+		pltr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",(-180,90,180,-90),plotArea=(0,0,360*10,180*10))
+	#pltr.textfont("Courier 10 Pitch", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD,20)
 
-	shpHandler = SHPHandler()
+	shpHandler = SHPHandler(pltr)
 
 	for i in range(2,len(sys.argv)):
 		shpHandler.setup(sys.argv[i])
@@ -188,7 +186,7 @@ if __name__ == "__main__":
 
 		shpHandler.cleanup()
 		#input("INFO: Shapefile[{}] processed...".format(sys.argv[i]))
-	gTr.flush()
+	shpHandler.plotter.flush()
 
 	input("Hope the shapefile was plotted well...")
 
