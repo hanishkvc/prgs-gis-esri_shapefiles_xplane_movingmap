@@ -22,16 +22,6 @@ gFileLength = 0
 gTr = None
 gDbf = None
 
-PLOT_SCALE_X=30
-PLOT_SCALE_Y=30
-
-def plot_dimension():
-	return (180*2*PLOT_SCALE_X, 90*2*PLOT_SCALE_Y)
-
-def plot_adjust_xy(x,y):
-	return (x*PLOT_SCALE_X, y*PLOT_SCALE_Y)
-
-
 def shp_read_fileheader(f):
 	global gFileLength
 
