@@ -18,18 +18,29 @@ SHAPETYPES = { 0: "NullShape", 1: "Point", 3: "PolyLine", 5: "Polygon", 8: "Mult
 		18: "MultiPointZ", 21: "PointM", 23: "PolyLineM", 25: "PolygonM", 28: "MultiPointM", 31: "MultiPatch" }
 
 gTr = None
-gDbf = None
 
 class SHPHandler:
+
+	def __init__(self):
+		self.dbfParser = hkvc_map_esri_shapefile_dbf.DbfParser()
+
+	def setup(self,fileBaseName):
+		self.shpFile=open(fileBaseName+".shp","rb")
+		self.shp_read_fileheader()
+		self.dbfParser.dbf_load(fileBaseName+".dbf")
+
+	def cleanup(self):
+		self.shpFile.close()
+		self.dbfParser.dbf_close()
 
 	def shp_read_fileheader(self):
 
 		#7 BigEndian Integers
 		#2 LittleEndian Integers
 		#8 LittleEndian Double
-		hdrDataBE=f.read(28)
+		hdrDataBE=self.shpFile.read(28)
 		hdrP1=struct.unpack(">7i",hdrDataBE)
-		hdrDataLE=f.read(72)
+		hdrDataLE=self.shpFile.read(72)
 		hdrP2=struct.unpack("<2i8d",hdrDataLE)
 		print(hdrP1,hdrP2)
 
@@ -45,50 +56,50 @@ class SHPHandler:
 		tVersion=hdrP2[0]
 		tShapeType=hdrP2[1]
 		tShapeTypeStr=SHAPETYPES[tShapeType]
-		gXMin = hdrP2[2]
-		gYMin = hdrP2[3]
-		gXMax = hdrP2[4]
-		gYMax = hdrP2[5]
-		gZMin = hdrP2[6]
-		gZMax = hdrP2[7]
-		gMMin = hdrP2[8]
-		gMMax = hdrP2[9]
+		self.fileBB = {}
+		self.fileBB['XMin'] = hdrP2[2]
+		self.fileBB['YMin'] = hdrP2[3]
+		self.fileBB['XMax'] = hdrP2[4]
+		self.fileBB['YMax'] = hdrP2[5]
+		self.fileBB['ZMin'] = hdrP2[6]
+		self.fileBB['ZMax'] = hdrP2[7]
+		self.fileBB['MMin'] = hdrP2[8]
+		self.fileBB['MMax'] = hdrP2[9]
 
 		print("FileCode[{}]\nFileLength[{}]\nVersion[{}]".format(tFileCode, tFileLength, tVersion))
 		print("ShapeType used in this ShapeFile is [{}]".format(tShapeTypeStr))
-		print("BoundingBox:\n\tXMin[{}],YMin[{}],XMax[{}],YMax[{}]".format(gXMin,gYMin,gXMax,gYMax))
-		print("\tZMin[{}],ZMax[{}],MMin[{}],MMax[{}]".format(gZMin,gZMax,gMMin,gMMax))
+		print("BoundingBox:[{}]".format(self.fileBB))
 
 
-	def shp_read_records(f):
+	def shp_read_records(self):
 		recIndex = 0
 		while True:
-			rHdrData = f.read(8)
+			rHdrData = self.shpFile.read(8)
 			(recNum, recContentLength) = struct.unpack(">2i",rHdrData)
 			recContentLength = recContentLength*2 # Convert for 16bit word size to 8bit byte size
 			print("Processing Record[{}] of size[{}]".format(recNum,recContentLength))
-			rContentData = f.read(recContentLength)
+			rContentData = self.shpFile.read(recContentLength)
 			rShapeType = rContentData[0:4]
 			rShapeType = int.from_bytes(rShapeType,'little')
 			print(SHAPETYPES[rShapeType])
 			if (rShapeType == 5):
-				shp_read_polygon(recIndex, rContentData)
+				self.shp_read_polygon(recIndex, rContentData)
 			if (rShapeType == 1):
-				shp_read_point(recIndex, rContentData)
+				self.shp_read_point(recIndex, rContentData)
 			recIndex += 1
 
 
-	def shp_read_point(recIndex, data):
+	def shp_read_point(self, recIndex, data):
 		pRec = struct.unpack("<i2d",data)
 		(pShapeType, pX, pY) = pRec
 		cPoint = (pX, pY)
 		print("pRec={}, cPointAdjusted={}".format(pRec,cPoint))
 		gTr.dot(cPoint[0],cPoint[1])
-		txt=gDbf.dbf_read_record_field_str(recIndex,"NAME")
+		txt=self.dbfParser.dbf_read_record_field_str(recIndex,"NAME")
 		gTr.text(pX, pY, txt)
 
 
-	def shp_read_polygon(recIndex, data):
+	def shp_read_polygon(self, recIndex, data):
 		# Each polygon shape record contains multiple polygons whose vertices are stored serially one after the other
 		hdrPolygonData = data[0:44]
 		hdrPolygon = struct.unpack("<i4d2i",hdrPolygonData)
@@ -111,7 +122,7 @@ class SHPHandler:
 
 		#NOTE: FIXED: This is a simple temp logic which ignores about multiple Polygons within a single Polygon shape record content
 		cPoly = 0
-		(cPointStart, cPointEnd) = shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
+		(cPointStart, cPointEnd) = self.shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
 		for i in range(0,pNumPoints):
 			cPoint = struct.unpack_from("<2d", polyPointsArrayData, i*16)
 			#print(cPoint)
@@ -130,12 +141,12 @@ class SHPHandler:
 				else:
 					gTr.stroke()
 				cPoly = cPoly+1
-				(cPointStart, cPointEnd) = shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
+				(cPointStart, cPointEnd) = self.shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
 			else:
 				gTr.line_to(cPoint[0],cPoint[1])
 
 
-	def shp_poly_startend(polyStartPointIndexesArray, curPoly, numPolys, numPoints):
+	def shp_poly_startend(self, polyStartPointIndexesArray, curPoly, numPolys, numPoints):
 		if (curPoly == numPolys):
 			cPointStart = -1
 			cPointEnd = -1
@@ -150,7 +161,6 @@ class SHPHandler:
 if __name__ == "__main__":
 	
 	global gTr
-	global gDbf
 	if (sys.argv[1] == "turtle"):
 		#gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",360,180,3,3)
 		gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",(-180,90,180,-90),plotArea=(-540,270,540,-270))
@@ -161,24 +171,22 @@ if __name__ == "__main__":
 		#gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,20,20)
 		gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",(-180,90,180,-90),plotArea=(0,0,360*10,180*10))
 	#gTr.textfont("Courier 10 Pitch", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD,20)
-	gDbf = hkvc_map_esri_shapefile_dbf.DbfParser()
+
+	shpHandler = SHPHandler()
 
 	for i in range(2,len(sys.argv)):
-		f=open(sys.argv[i]+".shp","rb")
-		shp_read_fileheader(f)
-		gDbf.dbf_load(sys.argv[i]+".dbf")
+		shpHandler.setup(sys.argv[i])
 		try:
-			shp_read_records(f)
+			shpHandler.shp_read_records()
 		except:
 			print(sys.exc_info())
-			if (self.fileLength == f.tell()):
-				print("INFO: Seems like End of File![{}]".format(f.tell()))
+			if (shpHandler.fileLength == shpHandler.shpFile.tell()):
+				print("INFO: Seems like End of File![{}]".format(shpHandler.shpFile.tell()))
 			else:
-				print("WARN: Unexpected FileLocation?[{}]".format(f.tell()))
+				print("WARN: Unexpected FileLocation?[{}]".format(shpHandler.shpFile.tell()))
 				input("CHECK: Hope above is fine...")
 
-		f.close()
-		gDbf.dbf_close()
+		shpHandler.cleanup()
 		#input("INFO: Shapefile[{}] processed...".format(sys.argv[i]))
 	gTr.flush()
 
