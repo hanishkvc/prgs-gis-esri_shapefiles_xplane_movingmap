@@ -21,49 +21,59 @@ import tkinter
 #   Positive Y is towards Top
 #
 
+PLOTAREA_DEFAULT = (-1, -1, -1, -1)
 
 class PlotterGeneric:
 
-	def __init__(self, plotArea, dataArea):
-		(pX1, pY1, pX2, pY2) = plotArea
+	def __init__(self, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
 		(dX1, dY1, dX2, dY2) = dataArea
-		print("plotArea:[{}]\ndataArea:[{}]\n".format(plotArea, dataArea))
-		pXRange = pX2-pX1
-		pYRange = pY2-pY1
-		dXRange = dX2-dX1
-		dYRange = dY2-dY1
-		self.pXMid = pX1+pXRange/2
-		self.pYMid = pY1+pYRange/2
-		self.dXMid = dX1+dXRange/2
-		self.dYMid = dY1+dYRange/2
+		(scaleX, scaleY) = scale
+		(pX1, pY1, pX2, pY2) = plotArea
+		if ((scaleX != 0x5A5A) and (scaleY != 0x5A5A)):
+			pX1 = dX1*scaleX
+			pY1 = dY1*scaleY
+			pX2 = dX2*scaleX
+			pY2 = dY2*scaleY
+		elif (plotArea == PLOTAREA_DEFAULT):
+			(pX1, pY1, pX2, pY2) = dataArea
+		plotArea = (pX1, pY1, pX2, pY2)
+		print("dataArea:[{}]\nplotArea:[{}]\n".format(dataArea, plotArea))
+
+		self.pXRange = pX2-pX1
+		self.pYRange = pY2-pY1
+		self.dXRange = dX2-dX1
+		self.dYRange = dY2-dY1
+		self.width = int(abs(self.pXRange))
+		self.height = int(abs(self.pYRange))
+		self.pXMid = pX1+self.pXRange/2
+		self.pYMid = pY1+self.pYRange/2
+		self.dXMid = dX1+self.dXRange/2
+		self.dYMid = dY1+self.dYRange/2
 		# 100 = 200
 		# dXRange = pXRange
 		# 50 =
 		# A = ?
-		self.xP2DRatio = pXRange/dXRange
-		self.yP2DRatio = pYRange/dYRange
+		self.xP2DRatio = self.pXRange/self.dXRange
+		self.yP2DRatio = self.pYRange/self.dYRange
 		#return pXMid, pYMid, dXMid, dYMid, xP2DRatio, yP2DRatio
 
-	def dataArea2plotArea(self, dX, dY):
+	def dataXY2plotXY(self, dX, dY):
 		#pX = dX*xP2DRatio+(pXMid-dXMid)
 		pX = self.pXMid+(dX-self.dXMid)*self.xP2DRatio
 		pY = self.pYMid+(dY-self.dYMid)*self.yP2DRatio
+		print("D2P:[{},{}]=[{},{}]".format(dX,dY,pX,pY))
 		return pX,pY
 
 
-class PlotterCairo:
+class PlotterCairo(PlotterGeneric):
 
-	def __init__(self, fileName, width, height, scaleX=1, scaleY=1):
-		self.scaleX = scaleX
-		self.scaleY = scaleY
-		self.width, self.height = self.scale(width, height)
-		self.transX = self.width/2
-		self.transY = self.height/2
+	def __init__(self, fileName, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
+		PlotterGeneric.__init__(self, dataArea, scale, plotArea)
 		#Not mirroring along X axis by making self.scaleY negative, 
 		#  because the cairo transform is setup for doing the same
 		self.crSurface = cairo.SVGSurface(fileName, self.width, self.height)
 		self.cr = cairo.Context(self.crSurface)
-		self.cr.transform(cairo.Matrix(scaleX, 0, 0, -1*scaleY, self.width/2, self.height/2))
+		#self.cr.transform(cairo.Matrix(scaleX, 0, 0, -1*scaleY, self.width/2, self.height/2))
 		self.cr.set_source_rgb(0, 0, 0)
 
 	def scale(self, x, y):
@@ -76,9 +86,11 @@ class PlotterCairo:
 		self.cr.set_source_rgb(r/255, g/255, b/255)
 
 	def move_to(self, x, y):
+		x, y = self.dataXY2plotXY(x, y)
 		self.cr.move_to(x, y)
 
 	def line_to(self, x, y):
+		x, y = self.dataXY2plotXY(x, y)
 		self.cr.line_to(x, y)
 
 	def stroke(self):
@@ -88,29 +100,22 @@ class PlotterCairo:
 		self.cr.fill()
 
 	def dot(self, x, y, size=1):
-		x, y = self.scale(x, y)
-		self.cr.save()
-		self.cr.identity_matrix()
-		self.cr.transform(cairo.Matrix(1, 0, 0, -1, self.width/2, self.height/2))
+		x, y = self.dataXY2plotXY(x, y)
 		self.cr.rectangle(x, y, size, size)
 		self.stroke()
-		self.cr.restore()
 
 	def textfont(self, fontName, slant, weight, size):
 		self.cr.select_font_face(fontName, slant, weight)
 		self.cr.set_font_size(size)
 
 	def text(self, x, y, sText):
-		x, y = self.scale(x, y)
+		x, y = self.dataXY2plotXY(x, y)
 		xBearing, yBearing, tWidth, tHeight = self.cr.text_extents(sText)[:4]
 		x1 = x-(tWidth/2)-xBearing-2
 		y1 = y-(tHeight/2)-yBearing-4
 		self.cr.save()
 		self.cr.set_source_rgba(0.8,0.8,0.8,0.5)
-		self.cr.identity_matrix()
-		self.cr.transform(cairo.Matrix(1, 0, 0, -1, self.width/2, self.height/2))
 		self.cr.rectangle(x1,y1,(tWidth+4),(tHeight+4))
-		#self.cr.rectangle(x1,y1,(tWidth+4)/self.scaleX,(tHeight+4)/self.scaleY)
 		self.cr.fill()
 		self.cr.move_to((x-(tWidth/2)),(y-(tHeight/2)-yBearing))
 		# Save the Plotting related Transformation matrix so that
@@ -128,18 +133,15 @@ class PlotterCairo:
 		self.crSurface.flush()
 
 
-class PlotterTurtle:
+class PlotterTurtle(PlotterGeneric):
 
 	# Note As the Turtle graphics already has the Origin at the Center
 	# of the plot area, there is no need for explicit translation to
 	# achieve the same. so transX, transY = 0, 0
 	# Similarly no need to mirror along X axis i.e make scaleY negative
 	# because the Turtle graphics already has Positve Y towards Top
-	def __init__(self, fileName, width, height, scaleX=1, scaleY=1):
-		self.scaleX = scaleX
-		self.scaleY = scaleY
-		self.transX = 0
-		self.transY = 0
+	def __init__(self, fileName, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
+		PlotterGeneric.__init__(self, dataArea, scale, plotArea)
 		self.tr = turtle
 		#self.tr.speed(0)
 		#self.tr.hideturtle()
@@ -156,14 +158,14 @@ class PlotterTurtle:
 		self.tr.color((r, g, b), (r, g, b))
 
 	def move_to(self, x, y):
-		x, y = self.transform_xy(x, y)
+		x, y = self.dataXY2plotXY(x, y)
 		self.tr.begin_fill()
 		self.tr.penup()
 		self.tr.goto(x, y)
 		self.tr.pendown()
 
 	def line_to(self, x, y):
-		x, y = self.transform_xy(x, y)
+		x, y = self.dataXY2plotXY(x, y)
 		self.tr.pendown()
 		self.tr.goto(x, y)
 		self.tr.penup()
@@ -189,22 +191,15 @@ class PlotterTurtle:
 	def flush(self):
 		pass
 
-class PlotterTk:
+class PlotterTk(PlotterGeneric):
 
-	def __init__(self, fileName, width, height, scaleX=1, scaleY=1):
-		self.scaleX = scaleX
-		self.scaleY = scaleY
-		#self.width = width * self.scaleX
-		#self.height = height * self.scaleY
-		self.width, self.height = self.scale(width, height)
-		self.transX = self.width/2
-		self.transY = self.height/2
+	def __init__(self, fileName, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
+		PlotterGeneric.__init__(self, dataArea, scale, plotArea)
 		self.troot = tkinter.Tk()
 		self.tframe = tkinter.Frame(self.troot)
 		self.tframe.pack()
 		self.cnvs = tkinter.Canvas(self.tframe,width=self.width,height=self.height)
 		self.cnvs.pack()
-		self.scaleY = scaleY*-1
 		self.sColor = "#000000"
 
 	def scale(self, x, y):
@@ -220,12 +215,12 @@ class PlotterTk:
 		pass
 
 	def move_to(self, x, y):
-		x, y = self.transform_xy(x, y)
+		x, y = self.dataXY2plotXY(x, y)
 		self.path = list()
 		self.path.append((x,y))
 
 	def line_to(self, x, y):
-		x, y = self.transform_xy(x, y)
+		x, y = self.dataXY2plotXY(x, y)
 		self.path.append((x,y))
 
 	def stroke(self):
@@ -235,14 +230,14 @@ class PlotterTk:
 		self.cnvs.create_polygon(self.path, fill=self.sColor)
 
 	def dot(self, x, y, size=2):
-		x, y = self.transform_xy(x, y)
+		x, y = self.dataXY2plotXY(x, y)
 		self.cnvs.create_oval(x, y, x+size, y+size, fill=self.sColor)
 
 	def textfont(self, fontName, slant, weight, size):
 		pass
 
 	def text(self, x, y, sText):
-		x, y = self.transform_xy(x, y)
+		x, y = self.dataXY2plotXY(x, y)
 		self.cnvs.create_text(x, y, text=sText, fill=self.sColor)
 
 	def flush(self):
@@ -252,11 +247,18 @@ class PlotterTk:
 if __name__ == "__main__":
 	import sys
 	if (sys.argv[1] == "turtle"):
-		PLT = PlotterTurtle("/tmp/PltTurtle.test.dummy", 400, 300, 2, 2)
+		PLT = PlotterTurtle("/tmp/PltTurtle.test.dummy", (-200,200,200,-200))
 	elif (sys.argv[1] == "tk"):
-		PLT = PlotterTk("/tmp/PltTk.test.dummy", 400, 300, 2, 2)
+		#BAD PLT = PlotterTk("/tmp/PltTk.test.dummy", (-200,200,200,-200))
+		# Above is bad because currently in this case plotArea gets directly mapped to dataArea
+		# which makes the origin of plot area at Center while TK uses a TopLeft origin
+		#PLT = PlotterTk("/tmp/PltTk.test.dummy", (-200,200,200,-200), plotArea=(0,0,440,440))
+		#OK PLT = PlotterTk("/tmp/PltTk.test.dummy", (-220,220,220,-220), plotArea=(0,0,800,600))
+		PLT = PlotterTk("/tmp/PltTk.test.dummy", (0,220,220,0), plotArea=(0,0,800,600))
 	else:
-		PLT = PlotterCairo("/tmp/PltCairo.test.svg", 400, 300, 2, 2)
+		#BAD PLT = PlotterCairo("/tmp/PltCairo.test.svg", (-200,200,200,-200), plotArea=(-200,200,200,-200))
+		# Above fails because plotArea is setup for Origin to be at Middle of plot area, but Cairo uses a TopLeft origin
+		PLT = PlotterCairo("/tmp/PltCairo.test.svg", (-200,200,200,-200), plotArea=(0,0,400,400))
 
 	PLT.move_to(0, 0)
 	PLT.line_to(200, 0)
