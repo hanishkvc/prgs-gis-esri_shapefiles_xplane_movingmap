@@ -164,7 +164,7 @@ if __name__ == "__main__":
 		pltr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",(-180,90,180,-90),plotArea=(-540,270,540,-270))
 	elif (sys.argv[1] == "tk"):
 		#pltr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",360,180,3,3)
-		pltr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",(-180,90,180,-90),plotArea=(0,0,1080,540))
+		pltr = hkvc_plotter.PlotterTk(None,(-180,90,180,-90),plotArea=(0,0,1080,540))
 	else:
 		#pltr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,20,20)
 		pltr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",(-180,90,180,-90),plotArea=(0,0,360*10,180*10))

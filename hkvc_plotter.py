@@ -61,7 +61,7 @@ class PlotterGeneric:
 		#pX = dX*xP2DRatio+(pXMid-dXMid)
 		pX = self.pXMid+(dX-self.dXMid)*self.xP2DRatio
 		pY = self.pYMid+(dY-self.dYMid)*self.yP2DRatio
-		print("D2P:[{},{}]=[{},{}]".format(dX,dY,pX,pY))
+		#print("D2P:[{},{}]=[{},{}]".format(dX,dY,pX,pY))
 		return pX,pY
 
 
@@ -190,14 +190,21 @@ class PlotterTurtle(PlotterGeneric):
 
 class PlotterTk(PlotterGeneric):
 
-	def __init__(self, fileName, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
+	def __init__(self, canvas, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
 		PlotterGeneric.__init__(self, dataArea, scale, plotArea)
+		if (canvas == None):
+			self.cnvs = self.test_app()
+		else:
+			self.cnvs = canvas
+		self.sColor = "#000000"
+
+	def test_app(self):
 		self.troot = tkinter.Tk()
 		self.tframe = tkinter.Frame(self.troot)
 		self.tframe.pack()
-		self.cnvs = tkinter.Canvas(self.tframe,width=self.width,height=self.height)
-		self.cnvs.pack()
-		self.sColor = "#000000"
+		canvas = tkinter.Canvas(self.tframe,width=self.width,height=self.height)
+		canvas.pack()
+		return canvas
 
 	def scale(self, x, y):
 		return x*self.scaleX, y*self.scaleY
@@ -251,7 +258,7 @@ if __name__ == "__main__":
 		# which makes the origin of plot area at Center while TK uses a TopLeft origin
 		#PLT = PlotterTk("/tmp/PltTk.test.dummy", (-200,200,200,-200), plotArea=(0,0,440,440))
 		#OK PLT = PlotterTk("/tmp/PltTk.test.dummy", (-220,220,220,-220), plotArea=(0,0,800,600))
-		PLT = PlotterTk("/tmp/PltTk.test.dummy", (0,220,220,0), plotArea=(0,0,800,600))
+		PLT = PlotterTk(None, (0,220,220,0), plotArea=(0,0,800,600))
 	else:
 		#BAD PLT = PlotterCairo("/tmp/PltCairo.test.svg", (-200,200,200,-200), plotArea=(-200,200,200,-200))
 		# Above fails because plotArea is setup for Origin to be at Middle of plot area, but Cairo uses a TopLeft origin
