@@ -112,21 +112,18 @@ class PlotterCairo(PlotterGeneric):
 		x, y = self.dataXY2plotXY(x, y)
 		xBearing, yBearing, tWidth, tHeight = self.cr.text_extents(sText)[:4]
 		x1 = x-(tWidth/2)-xBearing-2
-		y1 = y-(tHeight/2)-yBearing-4
+		y1 = y-(tHeight)
 		self.cr.save()
 		self.cr.set_source_rgba(0.8,0.8,0.8,0.5)
 		self.cr.rectangle(x1,y1,(tWidth+4),(tHeight+4))
 		self.cr.fill()
-		self.cr.move_to((x-(tWidth/2)),(y-(tHeight/2)-yBearing))
+		self.cr.move_to(x1,y)
 		# Save the Plotting related Transformation matrix so that
 		# Temporarily I can switch to a identity matrix for the text plotting 
 		# so that Text gets drawn properly independent of the transformation
 		# being used for plotting other things
 		self.cr.set_source_rgb(0.02,0.02,0.02)
-		savedMatrix = self.cr.get_matrix()
-		self.cr.identity_matrix()
 		self.cr.show_text(sText)
-		self.cr.set_matrix(savedMatrix)
 		self.cr.restore()
 
 	def flush(self):

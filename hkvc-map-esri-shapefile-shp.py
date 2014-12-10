@@ -163,11 +163,14 @@ def main():
 	global gTr
 	global gDbf
 	if (sys.argv[1] == "turtle"):
-		gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",360,180,3,3)
+		#gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",360,180,3,3)
+		gTr = hkvc_plotter.PlotterTurtle("/tmp/t100.dummy",(-180,90,180,-90),plotArea=(-540,270,540,-270))
 	elif (sys.argv[1] == "tk"):
-		gTr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",360,180,3,3)
+		#gTr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",360,180,3,3)
+		gTr = hkvc_plotter.PlotterTk("/tmp/t100.dummy",(-180,90,180,-90),plotArea=(0,0,1080,540))
 	else:
-		gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,20,20)
+		#gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",360,180,20,20)
+		gTr = hkvc_plotter.PlotterCairo("/tmp/t100.svg",(-180,90,180,-90),plotArea=(0,0,360*10,180*10))
 	#gTr.textfont("Courier 10 Pitch", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD,20)
 	gDbf = hkvc_map_esri_shapefile_dbf.DbfParser()
 
