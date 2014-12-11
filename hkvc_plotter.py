@@ -22,37 +22,60 @@ import tkinter
 #
 
 PLOTAREA_DEFAULT = (-1, -1, -1, -1)
+PLOTAREA_TYPE_TOPLEFT = 0
+PLOTAREA_TYPE_CENTER = 1
 
 class PlotterGeneric:
 
-	def __init__(self, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
+	def __init__(self, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT, plotAreaType=PLOTAREA_TYPE_TOPLEFT):
+		self.setup_data2plot(dataArea, scale, plotArea, plotAreaType)
+
+	def setup_data2plot(self, dataArea, scale, plotArea, plotAreaType):
+		self.dataArea = dataArea
 		(dX1, dY1, dX2, dY2) = dataArea
+		self.dXRange = dX2-dX1
+		self.dYRange = dY2-dY1
+		self.dXMid = dX1+self.dXRange/2
+		self.dYMid = dY1+self.dYRange/2
+
 		(scaleX, scaleY) = scale
 		(pX1, pY1, pX2, pY2) = plotArea
+
+		bUpdatePlotArea = False
 		if ((scaleX != 0x5A5A) and (scaleY != 0x5A5A)):
-			pX1 = dX1*scaleX
-			pY1 = dY1*scaleY
-			pX2 = dX2*scaleX
-			pY2 = dY2*scaleY
+			#pX1 = dX1*scaleX
+			#pY1 = dY1*scaleY
+			#pX2 = dX2*scaleX
+			#pY2 = dY2*scaleY
+			bUpdatePlotArea = True
 		elif (plotArea == PLOTAREA_DEFAULT):
-			(pX1, pY1, pX2, pY2) = dataArea
+			#(pX1, pY1, pX2, pY2) = dataArea
+			bUpdatePlotArea = True
+			scaleX = 1
+			scaleY = 1
+
+		if (bUpdatePlotArea):
+			if (PLOTAREA_TYPE_TOPLEFT):
+				pX1 = 0
+				pY1 = 0
+				pX2 = abs(self.dXRange)*scaleX
+				pY2 = abs(self.dYRange)*scaleY
+			elif (PLOTAREA_TYPE_CENTER):
+				pX1 = -1*abs(self.dXRange)/2
+				pY1 = abs(self.dYRange)/2
+				pX2 = abs(pX1)
+				pY2 = -1*pY1
+
 		plotArea = (pX1, pY1, pX2, pY2)
+		self.plotArea = plotArea
 		print("dataArea:[{}]\nplotArea:[{}]\n".format(dataArea, plotArea))
 
 		self.pXRange = pX2-pX1
 		self.pYRange = pY2-pY1
-		self.dXRange = dX2-dX1
-		self.dYRange = dY2-dY1
 		self.width = int(abs(self.pXRange))
 		self.height = int(abs(self.pYRange))
 		self.pXMid = pX1+self.pXRange/2
 		self.pYMid = pY1+self.pYRange/2
-		self.dXMid = dX1+self.dXRange/2
-		self.dYMid = dY1+self.dYRange/2
-		# 100 = 200
-		# dXRange = pXRange
-		# 50 =
-		# A = ?
 		self.xP2DRatio = self.pXRange/self.dXRange
 		self.yP2DRatio = self.pYRange/self.dYRange
 		#return pXMid, pYMid, dXMid, dYMid, xP2DRatio, yP2DRatio
