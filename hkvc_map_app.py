@@ -23,15 +23,26 @@ def setup_app():
 	gRoot = tkinter.Tk()
 	frameMain = tkinter.Frame(gRoot)
 	gCanvas = tkinter.Canvas(frameMain, width=800, height=600)
-	gCanvas.grid(row=0, column=0, columnspan=4)
+	gCanvas.grid(row=0, column=0, columnspan=7)
+
 	btnQuit = tkinter.Button(frameMain, text="Quit", command=gRoot.quit)
-	btnQuit.grid(row=1, column=0)
+	btnQuit.grid(row=2, column=0)
 	btnZoomIn = tkinter.Button(frameMain, text="ZoomIn", command=zoom_in)
-	btnZoomIn.grid(row=1, column=1)
+	btnZoomIn.grid(row=2, column=1)
 	btnZoomOut = tkinter.Button(frameMain, text="ZoomOut", command=zoom_out)
-	btnZoomOut.grid(row=1, column=2)
+	btnZoomOut.grid(row=2, column=2)
 	btnUpdate = tkinter.Button(frameMain, text="Update", command=load_map)
-	btnUpdate.grid(row=1, column=3)
+	btnUpdate.grid(row=2, column=3)
+
+	btnMoveTop = tkinter.Button(frameMain, text="Top", command=move_top)
+	btnMoveTop.grid(row=1, column=5)
+	btnMoveLeft = tkinter.Button(frameMain, text="Left", command=move_left)
+	btnMoveLeft.grid(row=2, column=4)
+	btnMoveRight = tkinter.Button(frameMain, text="Right", command=move_right)
+	btnMoveRight.grid(row=2, column=6)
+	btnMoveBottom = tkinter.Button(frameMain, text="Bottom", command=move_bottom)
+	btnMoveBottom.grid(row=3, column=5)
+
 	frameMain.pack()
 	return gRoot, gCanvas
 
@@ -70,6 +81,35 @@ def zoom_out():
 	dX2 = dX2*1.2
 	dY2 = dY2*1.2
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+
+def move_top():
+	(dX1, dY1, dX2, dY2) = gPltr.dataArea
+	dY = abs(dY2-dY1)
+	dY1 += dY*0.2
+	dY2 += dY*0.2
+	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+
+def move_bottom():
+	(dX1, dY1, dX2, dY2) = gPltr.dataArea
+	dY = abs(dY2-dY1)
+	dY1 -= dY*0.2
+	dY2 -= dY*0.2
+	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+
+def move_left():
+	(dX1, dY1, dX2, dY2) = gPltr.dataArea
+	dX = abs(dX2-dX1)
+	dX1 -= dX*0.2
+	dX2 -= dX*0.2
+	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+
+def move_right():
+	(dX1, dY1, dX2, dY2) = gPltr.dataArea
+	dX = abs(dX2-dX1)
+	dX1 += dX*0.2
+	dX2 += dX*0.2
+	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+
 
 setup_app()
 gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))
