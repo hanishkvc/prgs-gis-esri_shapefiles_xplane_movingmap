@@ -19,8 +19,8 @@ gShpHandler = None
 
 DATAWIDTH=360
 DATAHEIGHT=180
-SCALEX = 2
-SCALEY = 2
+SCALEX = 3
+SCALEY = 3
 
 def setup_app():
 	global gRoot
@@ -55,6 +55,7 @@ def setup_app():
 
 def load_map():
 	global gShpHandler
+	gShpHandler.plotter.color(0,0,250)
 	gShpHandler.plotter.clear()
 	for i in range(1,len(sys.argv)):
 		gShpHandler.setup(sys.argv[i])

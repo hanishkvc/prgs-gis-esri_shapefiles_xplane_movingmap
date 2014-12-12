@@ -11,7 +11,9 @@ import random
 import hkvc_plotter
 import hkvc_map_esri_shapefile_dbf
 
-DO_COLOR_RANDOM=True
+DO_FILL=True
+DO_COLOR_RANDOM=False
+DO_COLOR_EARTH=True
 
 SHAPEFILE_CODE = 9994
 SHAPETYPES = { 0: "NullShape", 1: "Point", 3: "PolyLine", 5: "Polygon", 8: "MultiPoint", 11: "PointZ", 13: "PolyLineZ", 15: "PolygonZ", 
@@ -97,6 +99,24 @@ class SHPHandler:
 		txt=self.dbfParser.dbf_read_record_field_str(recIndex,"NAME")
 		self.plotter.text(pX, pY, txt)
 
+	def do_color(self):
+		while True:
+			clrR = random.randint(0,255)
+			clrG = random.randint(0,255)
+			clrB = random.randint(0,255)
+			#print(clrR,clrG,clrB)
+			if (((clrB-clrG) > 150) and ((clrB-clrR) > 150)):
+				continue
+			else:
+				break
+		if (DO_COLOR_EARTH):
+			clrR = int(200+0.15*clrR)
+			clrG = int(200+0.15*clrG)
+			clrB = int(40+0.15*clrB)
+			self.plotter.color(clrR,clrG,clrB)
+		if (DO_COLOR_RANDOM):
+			self.plotter.color(clrR,clrG,clrB)
+
 
 	def shp_read_polygon(self, recIndex, data):
 		# Each polygon shape record contains multiple polygons whose vertices are stored serially one after the other
@@ -126,16 +146,11 @@ class SHPHandler:
 			cPoint = struct.unpack_from("<2d", polyPointsArrayData, i*16)
 			#print(cPoint)
 			if (i == cPointStart):
-				clrR = random.randint(0,255)
-				clrG = random.randint(0,255)
-				clrB = random.randint(0,255)
-				print(clrR,clrG,clrB)
-				if (DO_COLOR_RANDOM):
-					self.plotter.color(clrR,clrG,clrB)
+				self.do_color()
 				self.plotter.move_to(cPoint[0],cPoint[1])
 			elif (i == cPointEnd):
 				self.plotter.line_to(cPoint[0],cPoint[1])
-				if (DO_COLOR_RANDOM):
+				if (DO_FILL):
 					self.plotter.fill()
 				else:
 					self.plotter.stroke()
