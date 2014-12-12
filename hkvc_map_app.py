@@ -17,12 +17,18 @@ gRoot = None
 gCanvas = None
 gShpHandler = None
 
+DATAWIDTH=360
+DATAHEIGHT=180
+SCALEX = 2
+SCALEY = 2
+
 def setup_app():
 	global gRoot
 	global gCanvas
 	gRoot = tkinter.Tk()
 	frameMain = tkinter.Frame(gRoot)
-	gCanvas = tkinter.Canvas(frameMain, width=800, height=600)
+	#gCanvas = tkinter.Canvas(frameMain, width=800, height=600)
+	gCanvas = tkinter.Canvas(frameMain, width=DATAWIDTH*SCALEX, height=DATAHEIGHT*SCALEY)
 	gCanvas.grid(row=0, column=0, columnspan=7)
 
 	btnQuit = tkinter.Button(frameMain, text="Quit", command=gRoot.quit)
@@ -66,21 +72,33 @@ def load_map():
 	gShpHandler.plotter.flush()
 	#input("Hope the shapefile was plotted well...")
 
+def debug_rect(dX1, dY1, dX2, dY2):
+	gPltr.move_to(dX1,dY1)
+	gPltr.line_to(dX2,dY2)
+	#gPltr.cnvs.create_rectangle(dX1,dY1,dX2,dY2)
+	gPltr.stroke()
+
 def zoom_in():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
-	dX1 = dX1*0.8
-	dY1 = dY1*0.8
-	dX2 = dX2*0.8
-	dY2 = dY2*0.8
+	dX = abs(dX2-dX1)*0.2
+	dY = abs(dY2-dY1)*0.2
+	dX1 += dX
+	dY1 -= dY
+	dX2 -= dX
+	dY2 += dY
+	debug_rect(dX1,dY1,dX2,dY2)
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 	load_map()
 
 def zoom_out():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
-	dX1 = dX1*1.2
-	dY1 = dY1*1.2
-	dX2 = dX2*1.2
-	dY2 = dY2*1.2
+	dX = abs(dX2-dX1)*0.3
+	dY = abs(dY2-dY1)*0.3
+	dX1 -= dX
+	dY1 += dY
+	dX2 += dX
+	dY2 -= dY
+	debug_rect(dX1,dY1,dX2,dY2)
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 	load_map()
 
@@ -119,7 +137,7 @@ def move_right():
 
 setup_app()
 #gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))
-gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),scale=(2,2))
+gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),scale=(SCALEX,SCALEY))
 gShpHandler = hkvc_map_esri_shapefile_shp.SHPHandler(gPltr)
 gRoot.mainloop()
 
