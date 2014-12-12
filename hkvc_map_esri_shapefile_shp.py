@@ -100,22 +100,19 @@ class SHPHandler:
 		self.plotter.text(pX, pY, txt)
 
 	def do_color(self):
-		while True:
+		if (DO_COLOR_EARTH):
+			clrR = 200+random.randint(0,55)
+			clrG = 200+random.randint(0,55)
+			clrB = 40+random.randint(0,55)
+			self.plotter.color(clrR,clrG,clrB)
+		if (DO_COLOR_RANDOM):
 			clrR = random.randint(0,255)
 			clrG = random.randint(0,255)
 			clrB = random.randint(0,255)
-			#print(clrR,clrG,clrB)
 			if (((clrB-clrG) > 150) and ((clrB-clrR) > 150)):
-				continue
-			else:
-				break
-		if (DO_COLOR_EARTH):
-			clrR = int(200+0.15*clrR)
-			clrG = int(200+0.15*clrG)
-			clrB = int(40+0.15*clrB)
+				clrB = random.randint(0,128)
 			self.plotter.color(clrR,clrG,clrB)
-		if (DO_COLOR_RANDOM):
-			self.plotter.color(clrR,clrG,clrB)
+		#print(clrR,clrG,clrB)
 
 
 	def shp_read_polygon(self, recIndex, data):

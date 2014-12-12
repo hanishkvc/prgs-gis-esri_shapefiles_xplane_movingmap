@@ -254,7 +254,7 @@ class PlotterTk(PlotterGeneric):
 		return x*self.scaleX+self.transX, y*self.scaleY+self.transY
 
 	def color(self, r, g, b):
-		print("Color:{}{}{} = {:02X}{:02X}{:02X}".format(r,g,b,r,g,b))
+		#print("Color:{}-{}-{} = {:02X}{:02X}{:02X}".format(r,g,b,r,g,b))
 		self.sColor = "#{:02X}{:02X}{:02X}".format(r,g,b)
 		#self.cnvs.tk_setPalette(foreground=self.sColor, background="#FFFFFF")
 		pass
