@@ -50,23 +50,27 @@ class PlotterGeneric:
 			#pX2 = dX2*scaleX
 			#pY2 = dY2*scaleY
 			bUpdatePlotArea = True
+			print("INFO:plotArea: Scaling to [{}] of dataArea".format(scale))
 		elif (plotArea == PLOTAREA_DEFAULT):
 			#(pX1, pY1, pX2, pY2) = dataArea
 			bUpdatePlotArea = True
 			scaleX = 1
 			scaleY = 1
+			print("INFO:plotArea: Mapping 1:1 to dataArea")
 
 		if (bUpdatePlotArea):
-			if (PLOTAREA_TYPE_TOPLEFT):
+			if (plotAreaType == PLOTAREA_TYPE_TOPLEFT):
 				pX1 = 0
 				pY1 = 0
 				pX2 = abs(self.dXRange)*scaleX
 				pY2 = abs(self.dYRange)*scaleY
-			elif (PLOTAREA_TYPE_CENTER):
-				pX1 = -1*abs(self.dXRange)/2
-				pY1 = abs(self.dYRange)/2
+				print("INFO:plotArea: TopLeft")
+			elif (plotAreaType == PLOTAREA_TYPE_CENTER):
+				pX1 = (-1*abs(self.dXRange)/2)*scaleX
+				pY1 = (abs(self.dYRange)/2)*scaleY
 				pX2 = abs(pX1)
 				pY2 = -1*pY1
+				print("INFO:plotArea: Center")
 
 		plotArea = (pX1, pY1, pX2, pY2)
 		self.plotArea = plotArea
@@ -92,8 +96,8 @@ class PlotterGeneric:
 
 class PlotterCairo(PlotterGeneric):
 
-	def __init__(self, fileName, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
-		PlotterGeneric.__init__(self, dataArea, scale, plotArea)
+	def __init__(self, fileName, dataArea, scale=SCALE_DEFAULT, plotArea=PLOTAREA_DEFAULT, plotAreaType=PLOTAREA_TYPE_TOPLEFT):
+		PlotterGeneric.__init__(self, dataArea, scale, plotArea, plotAreaType)
 		#Not mirroring along X axis by making self.scaleY negative, 
 		#  because the cairo transform is setup for doing the same
 		self.crSurface = cairo.SVGSurface(fileName, self.width, self.height)
@@ -165,8 +169,8 @@ class PlotterTurtle(PlotterGeneric):
 	# achieve the same. so transX, transY = 0, 0
 	# Similarly no need to mirror along X axis i.e make scaleY negative
 	# because the Turtle graphics already has Positve Y towards Top
-	def __init__(self, fileName, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
-		PlotterGeneric.__init__(self, dataArea, scale, plotArea)
+	def __init__(self, fileName, dataArea, scale=SCALE_DEFAULT, plotArea=PLOTAREA_DEFAULT, plotAreaType=PLOTAREA_TYPE_CENTER):
+		PlotterGeneric.__init__(self, dataArea, scale, plotArea, plotAreaType)
 		self.tr = turtle
 		#self.tr.speed(0)
 		#self.tr.hideturtle()
@@ -221,8 +225,8 @@ class PlotterTurtle(PlotterGeneric):
 
 class PlotterTk(PlotterGeneric):
 
-	def __init__(self, canvas, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT):
-		PlotterGeneric.__init__(self, dataArea, scale, plotArea)
+	def __init__(self, canvas, dataArea, scale=SCALE_DEFAULT, plotArea=PLOTAREA_DEFAULT, plotAreaType=PLOTAREA_TYPE_TOPLEFT):
+		PlotterGeneric.__init__(self, dataArea, scale, plotArea, plotAreaType)
 		if (canvas == None):
 			self.cnvs = self.test_app()
 		else:

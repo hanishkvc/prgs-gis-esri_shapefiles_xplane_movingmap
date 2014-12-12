@@ -73,6 +73,7 @@ def zoom_in():
 	dX2 = dX2*0.8
 	dY2 = dY2*0.8
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+	load_map()
 
 def zoom_out():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
@@ -81,6 +82,7 @@ def zoom_out():
 	dX2 = dX2*1.2
 	dY2 = dY2*1.2
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+	load_map()
 
 def move_top():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
@@ -88,6 +90,7 @@ def move_top():
 	dY1 += dY*0.2
 	dY2 += dY*0.2
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+	load_map()
 
 def move_bottom():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
@@ -95,6 +98,7 @@ def move_bottom():
 	dY1 -= dY*0.2
 	dY2 -= dY*0.2
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+	load_map()
 
 def move_left():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
@@ -102,6 +106,7 @@ def move_left():
 	dX1 -= dX*0.2
 	dX2 -= dX*0.2
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+	load_map()
 
 def move_right():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
@@ -109,10 +114,12 @@ def move_right():
 	dX1 += dX*0.2
 	dX2 += dX*0.2
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+	load_map()
 
 
 setup_app()
-gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))
+#gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))
+gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),scale=(2,2))
 gShpHandler = hkvc_map_esri_shapefile_shp.SHPHandler(gPltr)
 gRoot.mainloop()
 
