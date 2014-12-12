@@ -30,6 +30,7 @@ def setup_app():
 	#gCanvas = tkinter.Canvas(frameMain, width=800, height=600)
 	gCanvas = tkinter.Canvas(frameMain, width=DATAWIDTH*SCALEX, height=DATAHEIGHT*SCALEY)
 	gCanvas.grid(row=0, column=0, columnspan=7)
+	gCanvas.bind("<ButtonRelease-1>", canvas_clicked)
 
 	btnQuit = tkinter.Button(frameMain, text="Quit", command=gRoot.quit)
 	btnQuit.grid(row=2, column=0)
@@ -134,6 +135,23 @@ def move_right():
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 	load_map()
 
+def canvas_clicked(event):
+	print("{},{}".format(event.x,event.y))
+	dX,dY = gPltr.plotXY2dataXY(event.x,event.y)
+	center_at(dX, dY)
+
+def center_at(nX, nY):
+	(dX1, dY1, dX2, dY2) = gPltr.dataArea
+	cX = (dX2+dX1)/2
+	cY = (dY2+dY1)/2
+	dX = nX - cX
+	dY = nY - cY
+	dX1 = dX1+dX
+	dY1 = dY1+dY
+	dX2 = dX2+dX
+	dY2 = dY2+dY
+	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+	load_map()
 
 setup_app()
 #gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))

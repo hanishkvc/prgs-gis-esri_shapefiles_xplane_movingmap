@@ -93,6 +93,12 @@ class PlotterGeneric:
 		#print("D2P:[{},{}]=[{},{}]".format(dX,dY,pX,pY))
 		return pX,pY
 
+	def plotXY2dataXY(self, pX, pY):
+		dX = self.dXMid+(pX-self.pXMid)*(1.0/self.xP2DRatio)
+		dY = self.dYMid+(pY-self.pYMid)*(1.0/self.yP2DRatio)
+		print("P2D:[{},{}]=[{},{}]".format(pX,pY,dX,dY))
+		return dX,dY
+
 
 class PlotterCairo(PlotterGeneric):
 
