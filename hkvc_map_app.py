@@ -26,9 +26,9 @@ def setup_app():
 	gCanvas.grid(row=0, column=0, columnspan=4)
 	btnQuit = tkinter.Button(frameMain, text="Quit", command=gRoot.quit)
 	btnQuit.grid(row=1, column=0)
-	btnZoomIn = tkinter.Button(frameMain, text="ZoomIn")
+	btnZoomIn = tkinter.Button(frameMain, text="ZoomIn", command=zoom_in)
 	btnZoomIn.grid(row=1, column=1)
-	btnZoomOut = tkinter.Button(frameMain, text="ZoomOut")
+	btnZoomOut = tkinter.Button(frameMain, text="ZoomOut", command=zoom_out)
 	btnZoomOut.grid(row=1, column=2)
 	btnUpdate = tkinter.Button(frameMain, text="Update", command=load_map)
 	btnUpdate.grid(row=1, column=3)
@@ -37,6 +37,7 @@ def setup_app():
 
 def load_map():
 	global gShpHandler
+	gShpHandler.plotter.clear()
 	for i in range(1,len(sys.argv)):
 		gShpHandler.setup(sys.argv[i])
 		try:
@@ -54,6 +55,21 @@ def load_map():
 	gShpHandler.plotter.flush()
 	#input("Hope the shapefile was plotted well...")
 
+def zoom_in():
+	(dX1, dY1, dX2, dY2) = gPltr.dataArea
+	dX1 = dX1*0.8
+	dY1 = dY1*0.8
+	dX2 = dX2*0.8
+	dY2 = dY2*0.8
+	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+
+def zoom_out():
+	(dX1, dY1, dX2, dY2) = gPltr.dataArea
+	dX1 = dX1*1.2
+	dY1 = dY1*1.2
+	dX2 = dX2*1.2
+	dY2 = dY2*1.2
+	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 
 setup_app()
 gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))

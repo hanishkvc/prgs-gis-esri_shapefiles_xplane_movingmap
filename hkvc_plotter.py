@@ -21,16 +21,17 @@ import tkinter
 #   Positive Y is towards Top
 #
 
+SCALE_DEFAULT = (0x5A5A, 0x5A5A)
 PLOTAREA_DEFAULT = (-1, -1, -1, -1)
 PLOTAREA_TYPE_TOPLEFT = 0
 PLOTAREA_TYPE_CENTER = 1
 
 class PlotterGeneric:
 
-	def __init__(self, dataArea, scale=(0x5A5A,0x5A5A), plotArea=PLOTAREA_DEFAULT, plotAreaType=PLOTAREA_TYPE_TOPLEFT):
+	def __init__(self, dataArea, scale=SCALE_DEFAULT, plotArea=PLOTAREA_DEFAULT, plotAreaType=PLOTAREA_TYPE_TOPLEFT):
 		self.setup_data2plot(dataArea, scale, plotArea, plotAreaType)
 
-	def setup_data2plot(self, dataArea, scale, plotArea, plotAreaType):
+	def setup_data2plot(self, dataArea, scale=SCALE_DEFAULT, plotArea=PLOTAREA_DEFAULT, plotAreaType=PLOTAREA_TYPE_TOPLEFT):
 		self.dataArea = dataArea
 		(dX1, dY1, dX2, dY2) = dataArea
 		self.dXRange = dX2-dX1
@@ -40,6 +41,7 @@ class PlotterGeneric:
 
 		(scaleX, scaleY) = scale
 		(pX1, pY1, pX2, pY2) = plotArea
+		self.plotAreaType = plotAreaType
 
 		bUpdatePlotArea = False
 		if ((scaleX != 0x5A5A) and (scaleY != 0x5A5A)):
@@ -149,6 +151,9 @@ class PlotterCairo(PlotterGeneric):
 		self.cr.show_text(sText)
 		self.cr.restore()
 
+	def clear(self):
+		self.cr.paint()
+
 	def flush(self):
 		self.crSurface.flush()
 
@@ -207,6 +212,9 @@ class PlotterTurtle(PlotterGeneric):
 	def text(self, x, y, sText):
 		self.move_to(x,y)
 		self.tr.write(sText)
+
+	def clear(self):
+		self.tr.clear()
 
 	def flush(self):
 		pass
@@ -267,6 +275,9 @@ class PlotterTk(PlotterGeneric):
 		x, y = self.dataXY2plotXY(x, y)
 		self.cnvs.create_text(x, y, text=sText, fill=self.sColor)
 
+	def clear(self):
+		self.cnvs.create_rectangle(self.plotArea, fill=self.sColor)
+
 	def flush(self):
 		pass
 
@@ -287,6 +298,11 @@ if __name__ == "__main__":
 		# Above fails because plotArea is setup for Origin to be at Middle of plot area, but Cairo uses a TopLeft origin
 		PLT = PlotterCairo("/tmp/PltCairo.test.svg", (-200,200,200,-200), plotArea=(0,0,400,400))
 
+	PLT.color(255, 0, 0)
+	PLT.text(0, 40, "AM I CLEARED???")
+	PLT.clear()
+
+	PLT.color(0, 255, 255)
 	PLT.move_to(0, 0)
 	PLT.line_to(200, 0)
 	PLT.line_to(200, 200)
