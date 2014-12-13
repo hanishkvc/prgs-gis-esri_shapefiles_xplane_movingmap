@@ -129,7 +129,11 @@ class SHPHandler:
 		hdrPolygonData = data[0:44]
 		hdrPolygon = struct.unpack("<i4d2i",hdrPolygonData)
 		(pShapeType, pBBXMin, pBBYMin, pBBXMax, pBBYMax, pNumParts, pNumPoints) = hdrPolygon
-		print(hdrPolygon)
+		#print(hdrPolygon)
+
+		if (not self.plotter.oneINanother_r2lt2b((pBBXMin, pBBYMin, pBBXMax, pBBYMax), self.plotter.dataArea)):
+			print("Dropping polygon[{}] outside dataArea[{}]".format(hdrPolygon, self.plotter.dataArea))
+			return
 
 		polyStartPointIndexesArrayStart = 44
 		polyStartPointIndexesArrayEnd = polyStartPointIndexesArrayStart + 4*pNumParts
