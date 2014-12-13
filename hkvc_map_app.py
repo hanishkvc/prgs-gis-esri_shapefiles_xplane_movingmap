@@ -45,6 +45,8 @@ def setup_app():
 	btnMoveTop.grid(row=1, column=5)
 	btnMoveLeft = tkinter.Button(frameMain, text="Left", command=move_left)
 	btnMoveLeft.grid(row=2, column=4)
+	btnInfo = tkinter.Button(frameMain, text="Info", command=info)
+	btnInfo.grid(row=2, column=5)
 	btnMoveRight = tkinter.Button(frameMain, text="Right", command=move_right)
 	btnMoveRight.grid(row=2, column=6)
 	btnMoveBottom = tkinter.Button(frameMain, text="Bottom", command=move_bottom)
@@ -80,6 +82,20 @@ def debug_rect(dX1, dY1, dX2, dY2):
 	#gPltr.cnvs.create_rectangle(dX1,dY1,dX2,dY2)
 	gPltr.stroke()
 
+""" Max dX = 360
+    Max dY = 180 """
+def setup_plotTextScaleRank(dataArea):
+	(dX1, dY1, dX2, dY2) = dataArea
+	dX = abs(dX2-dX1)
+	dY = abs(dY2-dY1)
+	xR = int(10-dX/36)
+	xR = (xR/3)+(xR/3)-3
+	yR = int(10-dY/18)
+	yR = (yR/3)+(yR/3)-3
+	if (xR < 0): xR = 0
+	if (yR < 0): yR = 0
+	gShpHandler.plotTextScaleRank = max(xR,yR)
+
 def zoom_in():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
 	dX = abs(dX2-dX1)*0.2
@@ -90,6 +106,7 @@ def zoom_in():
 	dY2 += dY
 	debug_rect(dX1,dY1,dX2,dY2)
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+	setup_plotTextScaleRank(gPltr.dataArea)
 	load_map()
 
 def zoom_out():
@@ -102,6 +119,7 @@ def zoom_out():
 	dY2 -= dY
 	debug_rect(dX1,dY1,dX2,dY2)
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
+	setup_plotTextScaleRank(gPltr.dataArea)
 	load_map()
 
 def move_top():
@@ -153,6 +171,11 @@ def center_at(nX, nY):
 	dY2 = dY2+dY
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 	load_map()
+
+def info():
+	print("plotTextScaleRank:{}".format(gShpHandler.plotTextScaleRank))
+	print("dataArea:{}".format(gPltr.dataArea))
+	print("plotArea:{}".format(gPltr.plotArea))
 
 setup_app()
 #gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))

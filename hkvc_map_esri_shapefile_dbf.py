@@ -46,7 +46,7 @@ class DbfParser:
 			fdHdr = struct.unpack("<11sciBB14x",fdHdrData)
 			#print(fdHdr)
 			(sFieldName, cFieldType,iFieldDataAddr,bFieldLength,bNumOfDeciPlaces) = fdHdr
-			sFieldName = sFieldName.decode().strip()
+			sFieldName = sFieldName.decode().strip().upper()
 			sFieldName = sFieldName.split('\x00')[0]
 			self.dbRecFields[sFieldName] = (iFOffset, cFieldType, bFieldLength)
 			iFOffset = iFOffset + bFieldLength

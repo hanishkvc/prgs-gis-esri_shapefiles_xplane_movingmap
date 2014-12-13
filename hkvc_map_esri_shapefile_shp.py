@@ -15,6 +15,8 @@ DO_FILL=True
 DO_COLOR_RANDOM=False
 DO_COLOR_EARTH=True
 
+PLOT_POINT_ALWAYS=False
+
 SHAPEFILE_CODE = 9994
 SHAPETYPES = { 0: "NullShape", 1: "Point", 3: "PolyLine", 5: "Polygon", 8: "MultiPoint", 11: "PointZ", 13: "PolyLineZ", 15: "PolygonZ", 
 		18: "MultiPointZ", 21: "PointM", 23: "PolyLineM", 25: "PolygonM", 28: "MultiPointM", 31: "MultiPatch" }
@@ -24,6 +26,7 @@ class SHPHandler:
 	def __init__(self, plotter):
 		self.plotter = plotter
 		self.dbfParser = hkvc_map_esri_shapefile_dbf.DbfParser()
+		self.plotTextScaleRank = 0
 
 	def setup(self,fileBaseName):
 		self.shpFile=open(fileBaseName+".shp","rb")
@@ -95,9 +98,15 @@ class SHPHandler:
 		(pShapeType, pX, pY) = pRec
 		cPoint = (pX, pY)
 		print("pRec={}, cPointAdjusted={}".format(pRec,cPoint))
-		self.plotter.dot(cPoint[0],cPoint[1])
+		if (PLOT_POINT_ALWAYS):
+			self.plotter.dot(cPoint[0],cPoint[1])
 		txt=self.dbfParser.dbf_read_record_field_str(recIndex,"NAME")
-		self.plotter.text(pX, pY, txt)
+		scaleRank=int(self.dbfParser.dbf_read_record_field_str(recIndex,"SCALERANK"))
+		if (self.plotTextScaleRank >= scaleRank):
+			self.plotter.dot(cPoint[0],cPoint[1])
+			if (DO_COLOR_EARTH):
+				self.plotter.color(40,40,40)
+			self.plotter.text(pX, pY, txt)
 
 	def do_color(self):
 		if (DO_COLOR_EARTH):
