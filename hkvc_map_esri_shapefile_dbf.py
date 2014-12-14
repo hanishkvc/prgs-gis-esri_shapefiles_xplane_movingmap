@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
 	bModeQueryField = False
 	bModePlot = False
-	if (len(sys.argv) == 3):
+	if (len(sys.argv) >= 3):
 		bModeQueryField = True
 	else:
 		if (bCanPlot):
@@ -117,9 +117,10 @@ if __name__ == "__main__":
 
 	for i in range(0,db.dbNumRecs):
 		if (bModeQueryField):
-			fdByte = db.dbf_read_record_field_bytes(i,sys.argv[2])
-			fdStr  = db.dbf_read_record_field_str(i,sys.argv[2])
-			print(i,fdByte,fdStr)
+			for j in range(2, len(sys.argv)):
+				fdByte = db.dbf_read_record_field_bytes(i,sys.argv[j])
+				fdStr  = db.dbf_read_record_field_str(i,sys.argv[j])
+				print("{}:{}=[{}][{}]".format(i,sys.argv[j],fdByte,fdStr))
 		if (bModePlot):
 			latY = float(db.dbf_read_record_field_str(i,"LATITUDE"))
 			lonX = float(db.dbf_read_record_field_str(i,"LONGITUDE"))
