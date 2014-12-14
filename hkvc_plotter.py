@@ -307,6 +307,13 @@ class PlotterTk(PlotterGeneric):
 		x, y = self.dataXY2plotXY(x, y)
 		self.cnvs.create_text(x, y, text=sText, fill=self.sColor)
 
+	def polygon(self, points):
+		for i in range(0,len(points)):
+			[x, y] = points[i]
+			x, y = self.dataXY2plotXY(x, y)
+			points[i] = [x,y]
+		return self.cnvs.create_polygon(points, fill=self.sColor)
+
 	def clear(self):
 		self.cnvs.create_rectangle(self.plotArea, fill=self.sColor)
 

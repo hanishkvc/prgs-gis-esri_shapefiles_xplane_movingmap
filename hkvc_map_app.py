@@ -22,6 +22,8 @@ DATAHEIGHT=180
 SCALEX = 3
 SCALEY = 3
 
+gPlane = None
+
 def setup_app():
 	global gRoot
 	global gCanvas
@@ -175,7 +177,33 @@ def center_at(nX, nY):
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 	load_map()
 
+def center_at_ifreqd(nX, nY):
+	(dX1, dY1, dX2, dY2) = gPltr.dataArea
+	cX = (dX2+dX1)/2
+	cY = (dY2+dY1)/2
+	dX = abs(nX-cX)
+	dY = abs(nY-cY)
+	hX = abs(cX-dX1)
+	hY = abs(cY-dY2)
+	if ((dX > hX*0.75) or (dY > hY*0.75)):
+		center_at(nX, nY)
+
+def draw_plane(x, y):
+	global gPlane
+
+	points = list()
+	points.append([x,y])
+	points.append([x+2,y+2])
+	points.append([x,y+4])
+	if (gPlane == None):
+		gPltr.color(250, 0, 0)
+		gPlane = gPltr.polygon(points)
+	else:
+		gPltr.cnvs.delete(gPlane)
+		gPlane = None
+
 def info():
+	draw_plane(10,10)
 	print("plotTextScaleRank:{}".format(gShpHandler.plotTextScaleRank))
 	print("dataArea:{}".format(gPltr.dataArea))
 	print("plotArea:{}".format(gPltr.plotArea))
