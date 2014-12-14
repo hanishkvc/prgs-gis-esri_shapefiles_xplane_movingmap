@@ -29,6 +29,7 @@ class SHPHandler:
 		self.plotTextScaleRank = 0
 
 	def setup(self,fileBaseName):
+		self.shpFileName = fileBaseName
 		self.shpFile=open(fileBaseName+".shp","rb")
 		self.shp_read_fileheader()
 		self.dbfParser.dbf_load(fileBaseName+".dbf")
@@ -53,7 +54,7 @@ class SHPHandler:
 			print("ERROR: Not a ShapeFile, Quiting...")
 			exit()
 		else:
-			print("INFO: This is a ShapeFile, Continuing...")
+			print("INFO: [{}] is a ShapeFile, Continuing...".format(self.shpFileName))
 
 		tFileLength=hdrP1[6]*2	# Because size is mentioned in 16bit word  units
 		self.fileLength = tFileLength
@@ -77,27 +78,35 @@ class SHPHandler:
 
 	def shp_read_records(self):
 		recIndex = 0
+		self.droppedPolygonCnt = 0
+		self.droppedPointCnt = 0
 		while True:
 			rHdrData = self.shpFile.read(8)
+			if (len(rHdrData) == 0):
+				if (self.fileLength != self.shpFile.tell()):
+					print("WARN: fileLength[{}] != filePosition[{}]".format(self.fileLength, self.shpFile.tell()))
+				print("INFO: LastRecNum [{}], TotalRecCnt [{}]".format(recNum, recIndex))
+				break
 			(recNum, recContentLength) = struct.unpack(">2i",rHdrData)
 			recContentLength = recContentLength*2 # Convert for 16bit word size to 8bit byte size
-			print("Processing Record[{}] of size[{}]".format(recNum,recContentLength))
+			#print("Processing Record[{}] of size[{}]".format(recNum,recContentLength))
 			rContentData = self.shpFile.read(recContentLength)
 			rShapeType = rContentData[0:4]
 			rShapeType = int.from_bytes(rShapeType,'little')
-			print(SHAPETYPES[rShapeType])
+			#print(SHAPETYPES[rShapeType])
 			if (rShapeType == 5):
 				self.shp_read_polygon(recIndex, rContentData)
 			if (rShapeType == 1):
 				self.shp_read_point(recIndex, rContentData)
 			recIndex += 1
+		print("INFO: droppedPolygonCnt [{}], droppedPointCnt [{}]".format(self.droppedPolygonCnt, self.droppedPointCnt))
 
 
 	def shp_read_point(self, recIndex, data):
 		pRec = struct.unpack("<i2d",data)
 		(pShapeType, pX, pY) = pRec
 		cPoint = (pX, pY)
-		print("pRec={}, cPointAdjusted={}".format(pRec,cPoint))
+		#print("pRec={}, cPointAdjusted={}".format(pRec,cPoint))
 		if (PLOT_POINT_ALWAYS):
 			self.plotter.dot(cPoint[0],cPoint[1])
 		txt=self.dbfParser.dbf_read_record_field_str(recIndex,"NAME")
@@ -107,6 +116,8 @@ class SHPHandler:
 			if (DO_COLOR_EARTH):
 				self.plotter.color(40,40,40)
 			self.plotter.text(pX, pY, txt)
+		else:
+			self.droppedPointCnt += 1
 
 	def do_color(self):
 		if (DO_COLOR_EARTH):
@@ -133,6 +144,7 @@ class SHPHandler:
 
 		if (not self.plotter.oneINanother_r2lt2b((pBBXMin, pBBYMin, pBBXMax, pBBYMax), self.plotter.dataArea)):
 			print("Dropping polygon[{}] outside dataArea[{}]".format(hdrPolygon, self.plotter.dataArea))
+			self.droppedPolygonCnt += 1
 			return
 
 		polyStartPointIndexesArrayStart = 44
