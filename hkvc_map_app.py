@@ -84,17 +84,20 @@ def debug_rect(dX1, dY1, dX2, dY2):
 
 """ Max dX = 360
     Max dY = 180 """
+dataAreaToScaleRank = [0, 0, 0, 0, 0,  0, 0, 0, 0, 1,   1, 1, 1, 1, 1,   1, 2, 2, 3, 3]
 def setup_plotTextScaleRank(dataArea):
 	(dX1, dY1, dX2, dY2) = dataArea
 	dX = abs(dX2-dX1)
 	dY = abs(dY2-dY1)
-	xR = int(10-dX/36)
-	xR = (xR/3)+(xR/3)-3
-	yR = int(10-dY/18)
-	yR = (yR/3)+(yR/3)-3
-	if (xR < 0): xR = 0
-	if (yR < 0): yR = 0
-	gShpHandler.plotTextScaleRank = max(xR,yR)
+	xR = int(20-dX/18)
+	yR = int(20-dY/9)
+	xR = dataAreaToScaleRank[xR]
+	yR = dataAreaToScaleRank[yR]
+	if (xR == 3):
+		xR = xR + int(4-dX/9)
+		if (xR >= 4):
+			xR -= 1
+	gShpHandler.plotTextScaleRank = max(xR, yR)
 
 def zoom_in():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea

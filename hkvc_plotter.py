@@ -99,7 +99,7 @@ class PlotterGeneric:
 		print("P2D:[{},{}]=[{},{}]".format(pX,pY,dX,dY))
 		return dX,dY
 
-	def oneINanother_r2lt2b(self, rect1, rect2):
+	def oneINanother_r2lt2b(self, rect1, rect2, bCheckBothWays=True):
 		(r1X1, r1Y1, r1X2, r1Y2) = rect1
 		(r2X1, r2Y1, r2X2, r2Y2) = rect2
 		matchCnt = 0
@@ -114,7 +114,12 @@ class PlotterGeneric:
 
 		if (matchCnt >= 2):
 			return True
-		return False
+		elif (bCheckBothWays):
+			return self.oneINanother_r2lt2b(rect2, rect1, False)
+		elif (matchCnt >= 1):
+			return True
+		else:
+			return False
 
 
 class PlotterCairo(PlotterGeneric):
