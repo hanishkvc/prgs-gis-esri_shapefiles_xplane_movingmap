@@ -26,6 +26,7 @@ SCALEY = 3
 
 gPlane = None
 gMovingMapThread = None
+gSimCnt = 0
 
 def setup_app():
 	global gRoot
@@ -104,10 +105,16 @@ def setup_plotTextScaleRank(dataArea):
 			xR -= 1
 	gShpHandler.plotTextScaleRank = max(xR, yR)
 
-def zoom_in():
+def zoom_normal(loadMap=True):
+	gPltr.setup_data2plot((-180,90,180,-90), plotArea=gPltr.plotArea)
+	setup_plotTextScaleRank(gPltr.dataArea)
+	if (loadMap):
+		load_map()
+
+def zoom_in(factor=0.2, loadMap=True):
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
-	dX = abs(dX2-dX1)*0.2
-	dY = abs(dY2-dY1)*0.2
+	dX = abs(dX2-dX1)*factor
+	dY = abs(dY2-dY1)*factor
 	dX1 += dX
 	dY1 -= dY
 	dX2 -= dX
@@ -115,12 +122,13 @@ def zoom_in():
 	debug_rect(dX1,dY1,dX2,dY2)
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 	setup_plotTextScaleRank(gPltr.dataArea)
-	load_map()
+	if (loadMap):
+		load_map()
 
-def zoom_out():
+def zoom_out(factor=0.3, loadMap=True):
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
-	dX = abs(dX2-dX1)*0.3
-	dY = abs(dY2-dY1)*0.3
+	dX = abs(dX2-dX1)*factor
+	dY = abs(dY2-dY1)*factor
 	dX1 -= dX
 	dY1 += dY
 	dX2 += dX
@@ -128,7 +136,8 @@ def zoom_out():
 	debug_rect(dX1,dY1,dX2,dY2)
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 	setup_plotTextScaleRank(gPltr.dataArea)
-	load_map()
+	if (loadMap):
+		load_map()
 
 def move_top():
 	(dX1, dY1, dX2, dY2) = gPltr.dataArea
@@ -191,7 +200,25 @@ def center_at_ifreqd(nX, nY):
 	if ((dX > hX*0.75) or (dY > hY*0.75)):
 		center_at(nX, nY)
 
+def auto_zoom():
+	global gSimCnt
+
+	gSimCnt += 1
+	tRem = gSimCnt % 30
+	if (tRem == 0):
+		zoom_normal(False)
+		return True
+	elif (tRem == 10):
+		zoom_in(0.4, False)
+		return True
+	elif (tRem == 20):
+		zoom_in(0.4, False)
+		return True
+	return False
+
 def plane_at(x, y):
+	if (auto_zoom()):
+		center_at(x, y)
 	center_at_ifreqd(x, y)
 	gPlane.moved_to(x,y)
 	gPlane.draw_path()
@@ -221,6 +248,7 @@ setup_app()
 #gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))
 gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),scale=(SCALEX,SCALEY))
 gShpHandler = hkvc_map_esri_shapefile_shp.SHPHandler(gPltr)
+hkvc_map_esri_shapefile_shp.PLOT_POINT_ALWAYS=True
 gPlane = hkvc_plane.Plane(gPltr)
 gRoot.mainloop()
 
