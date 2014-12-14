@@ -13,6 +13,7 @@ import hkvc_map_esri_shapefile_dbf
 import hkvc_map_esri_shapefile_shp
 import tkinter
 import time
+import hkvc_plane
 
 gRoot = None
 gCanvas = None
@@ -24,8 +25,6 @@ SCALEX = 3
 SCALEY = 3
 
 gPlane = None
-gPlaneX = 0
-gPlaneY = 0
 gMovingMapThread = None
 
 def setup_app():
@@ -192,33 +191,22 @@ def center_at_ifreqd(nX, nY):
 	if ((dX > hX*0.75) or (dY > hY*0.75)):
 		center_at(nX, nY)
 
-def draw_plane(x, y):
-	global gPlane
-
-	points = list()
-	points.append([x,y])
-	points.append([x+5,y+5])
-	points.append([x,y+10])
-	if (gPlane == None):
-		gPltr.color(250, 0, 0)
-		gPlane = gPltr.polygon_noscale(points)
-	else:
-		gPltr.cnvs.delete(gPlane)
-		gPltr.color(250, 0, 0)
-		gPlane = gPltr.polygon_noscale(points)
-
 def plane_at(x, y):
 	center_at_ifreqd(x, y)
-	draw_plane(x, y)
+	gPlane.moved_to(x,y)
+	gPlane.draw_path()
+	gPlane.draw_plane()
 
 def moving_map_random():
-	global gPlaneX, gPlaneY
-	gPlaneX += random.randint(-8,8)
-	gPlaneY += random.randint(-4,4)
+	global gPlane
+	x = gPlane.x + random.randint(-8,8)
+	y = gPlane.y + random.randint(-4,4)
 	print("MovingMapRandom: Sleeping...")
-	time.sleep(10)
+	# Added to test if a busy logic here will block Tk GUI
+	# AND AS EXPECTED, it does block/interfere with Tk GUI
+	time.sleep(5)
 	print("MovingMapRandom: Active again...")
-	plane_at(gPlaneX, gPlaneY)
+	plane_at(x, y)
 	gMovingMapThread = gRoot.after(5000, moving_map_random)
 
 def info():
@@ -233,5 +221,6 @@ setup_app()
 #gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))
 gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),scale=(SCALEX,SCALEY))
 gShpHandler = hkvc_map_esri_shapefile_shp.SHPHandler(gPltr)
+gPlane = hkvc_plane.Plane(gPltr)
 gRoot.mainloop()
 
