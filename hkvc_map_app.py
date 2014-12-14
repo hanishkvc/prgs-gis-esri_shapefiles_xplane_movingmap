@@ -12,6 +12,7 @@ import hkvc_plotter
 import hkvc_map_esri_shapefile_dbf
 import hkvc_map_esri_shapefile_shp
 import tkinter
+import time
 
 gRoot = None
 gCanvas = None
@@ -23,6 +24,9 @@ SCALEX = 3
 SCALEY = 3
 
 gPlane = None
+gPlaneX = 0
+gPlaneY = 0
+gMovingMapThread = None
 
 def setup_app():
 	global gRoot
@@ -200,10 +204,27 @@ def draw_plane(x, y):
 		gPlane = gPltr.polygon_noscale(points)
 	else:
 		gPltr.cnvs.delete(gPlane)
-		gPlane = None
+		gPltr.color(250, 0, 0)
+		gPlane = gPltr.polygon_noscale(points)
+
+def plane_at(x, y):
+	center_at_ifreqd(x, y)
+	draw_plane(x, y)
+
+def moving_map_random():
+	global gPlaneX, gPlaneY
+	gPlaneX += random.randint(-8,8)
+	gPlaneY += random.randint(-4,4)
+	print("MovingMapRandom: Sleeping...")
+	time.sleep(10)
+	print("MovingMapRandom: Active again...")
+	plane_at(gPlaneX, gPlaneY)
+	gMovingMapThread = gRoot.after(5000, moving_map_random)
 
 def info():
-	draw_plane(10,10)
+	#draw_plane(10,10)
+	if (gMovingMapThread == None):
+		moving_map_random()
 	print("plotTextScaleRank:{}".format(gShpHandler.plotTextScaleRank))
 	print("dataArea:{}".format(gPltr.dataArea))
 	print("plotArea:{}".format(gPltr.plotArea))
