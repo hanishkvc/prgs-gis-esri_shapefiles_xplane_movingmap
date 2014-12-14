@@ -193,11 +193,11 @@ def draw_plane(x, y):
 
 	points = list()
 	points.append([x,y])
-	points.append([x+2,y+2])
-	points.append([x,y+4])
+	points.append([x+5,y+5])
+	points.append([x,y+10])
 	if (gPlane == None):
 		gPltr.color(250, 0, 0)
-		gPlane = gPltr.polygon(points)
+		gPlane = gPltr.polygon_noscale(points)
 	else:
 		gPltr.cnvs.delete(gPlane)
 		gPlane = None

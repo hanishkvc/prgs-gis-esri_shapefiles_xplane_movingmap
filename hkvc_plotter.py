@@ -314,6 +314,18 @@ class PlotterTk(PlotterGeneric):
 			points[i] = [x,y]
 		return self.cnvs.create_polygon(points, fill=self.sColor)
 
+	def polygon_noscale(self, points):
+		[x, y] = points[0]
+		nx, ny = self.dataXY2plotXY(x, y)
+		dx = x-nx
+		dy = y-ny
+		for i in range(0,len(points)):
+			[x, y] = points[i]
+			x = x - dx
+			y = y - dy
+			points[i] = [x,y]
+		return self.cnvs.create_polygon(points, fill=self.sColor)
+
 	def clear(self):
 		self.cnvs.create_rectangle(self.plotArea, fill=self.sColor)
 
