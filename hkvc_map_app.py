@@ -39,7 +39,7 @@ def setup_app():
 	gCanvas.grid(row=0, column=0, columnspan=8)
 	gCanvas.bind("<ButtonRelease-1>", canvas_clicked)
 
-	btnQuit = tkinter.Button(frameMain, text="Quit", command=gRoot.quit)
+	btnQuit = tkinter.Button(frameMain, text="Quit", command=quit)
 	btnQuit.grid(row=2, column=0)
 	btnZoomIn = tkinter.Button(frameMain, text="ZoomIn", command=zoom_in)
 	btnZoomIn.grid(row=2, column=1)
@@ -232,6 +232,8 @@ def update_map_cb():
 	global gMMData
 	if (gMMData.get_position()):
 		plane_at(gMMData.planeX, gMMData.planeY)
+	else:
+		print("INFO: No NewData from MMData")
 	gUpdateCB = gRoot.after(5000, update_map_cb)
 
 def info():
@@ -245,9 +247,17 @@ def start():
 	if (gPlane == None):
 		gPlane = hkvc_plane.Plane(gPltr)
 	if (gMMData == None):
-		gMMData = hkvc_movingmap_data.MMRandom()
+		#gMMData = hkvc_movingmap_data.MMRandom()
+		gMMData = hkvc_movingmap_data.MMXPlane()
 	if (gUpdateCB == None):
 		update_map_cb()
+
+def quit():
+	global gMMData, gRoot
+
+	if (gMMData != None):
+		gMMData.stop()
+	gRoot.quit()
 
 setup_app()
 #gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))
