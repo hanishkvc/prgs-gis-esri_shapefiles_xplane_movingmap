@@ -34,7 +34,7 @@ class MMXPlane():
 		self.sock.bind(("0.0.0.0", XPLANE_IPPORT))
 		self.bRun = True
 		self.dataSem = threading.Semaphore()
-		self.thread = threading.Thread(target=self.get_data)
+		self.thread = threading.Thread(target=self.get_data, daemon=True)
 		self.thread.start()
 
 	def process_data_simple(self, data):
