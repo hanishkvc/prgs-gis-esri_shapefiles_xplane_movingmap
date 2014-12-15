@@ -7,13 +7,13 @@
 
 import struct
 import sys
-import random
 import hkvc_plotter
 import hkvc_map_esri_shapefile_dbf
 import hkvc_map_esri_shapefile_shp
 import tkinter
 import time
 import hkvc_plane
+import hkvc_movingmap_data
 
 gRoot = None
 gCanvas = None
@@ -25,7 +25,8 @@ SCALEX = 3
 SCALEY = 3
 
 gPlane = None
-gMovingMapThread = None
+gUpdateCB = None
+gMMData = None
 gSimCnt = 0
 
 def setup_app():
@@ -35,7 +36,7 @@ def setup_app():
 	frameMain = tkinter.Frame(gRoot)
 	#gCanvas = tkinter.Canvas(frameMain, width=800, height=600)
 	gCanvas = tkinter.Canvas(frameMain, width=DATAWIDTH*SCALEX, height=DATAHEIGHT*SCALEY)
-	gCanvas.grid(row=0, column=0, columnspan=7)
+	gCanvas.grid(row=0, column=0, columnspan=8)
 	gCanvas.bind("<ButtonRelease-1>", canvas_clicked)
 
 	btnQuit = tkinter.Button(frameMain, text="Quit", command=gRoot.quit)
@@ -44,19 +45,21 @@ def setup_app():
 	btnZoomIn.grid(row=2, column=1)
 	btnZoomOut = tkinter.Button(frameMain, text="ZoomOut", command=zoom_out)
 	btnZoomOut.grid(row=2, column=2)
-	btnUpdate = tkinter.Button(frameMain, text="Update", command=load_map)
+	btnUpdate = tkinter.Button(frameMain, text="reload", command=load_map)
 	btnUpdate.grid(row=2, column=3)
+	btnStart = tkinter.Button(frameMain, text="Start", command=start)
+	btnStart.grid(row=2, column=4)
 
 	btnMoveTop = tkinter.Button(frameMain, text="Top", command=move_top)
-	btnMoveTop.grid(row=1, column=5)
+	btnMoveTop.grid(row=1, column=6)
 	btnMoveLeft = tkinter.Button(frameMain, text="Left", command=move_left)
-	btnMoveLeft.grid(row=2, column=4)
+	btnMoveLeft.grid(row=2, column=5)
 	btnInfo = tkinter.Button(frameMain, text="Info", command=info)
-	btnInfo.grid(row=2, column=5)
+	btnInfo.grid(row=2, column=6)
 	btnMoveRight = tkinter.Button(frameMain, text="Right", command=move_right)
-	btnMoveRight.grid(row=2, column=6)
+	btnMoveRight.grid(row=2, column=7)
 	btnMoveBottom = tkinter.Button(frameMain, text="Bottom", command=move_bottom)
-	btnMoveBottom.grid(row=3, column=5)
+	btnMoveBottom.grid(row=3, column=6)
 
 	frameMain.pack()
 	return gRoot, gCanvas
@@ -224,31 +227,33 @@ def plane_at(x, y):
 	gPlane.draw_path()
 	gPlane.draw_plane()
 
-def moving_map_random():
-	global gPlane
-	x = gPlane.x + random.randint(-8,8)
-	y = gPlane.y + random.randint(-4,4)
-	print("MovingMapRandom: Sleeping...")
-	# Added to test if a busy logic here will block Tk GUI
-	# AND AS EXPECTED, it does block/interfere with Tk GUI
-	time.sleep(5)
-	print("MovingMapRandom: Active again...")
-	plane_at(x, y)
-	gMovingMapThread = gRoot.after(5000, moving_map_random)
+def update_map_cb():
+	global gUpdateCB
+	global gMMData
+	if (gMMData.get_position()):
+		plane_at(gMMData.planeX, gMMData.planeY)
+	gUpdateCB = gRoot.after(5000, update_map_cb)
 
 def info():
-	#draw_plane(10,10)
-	if (gMovingMapThread == None):
-		moving_map_random()
 	print("plotTextScaleRank:{}".format(gShpHandler.plotTextScaleRank))
 	print("dataArea:{}".format(gPltr.dataArea))
 	print("plotArea:{}".format(gPltr.plotArea))
+
+def start():
+	global gPlane, gMMData, gUpdateCB
+
+	if (gPlane == None):
+		gPlane = hkvc_plane.Plane(gPltr)
+	if (gMMData == None):
+		gMMData = hkvc_movingmap_data.MMRandom()
+	if (gUpdateCB == None):
+		update_map_cb()
 
 setup_app()
 #gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),plotArea=(0,0,800,600))
 gPltr = hkvc_plotter.PlotterTk(gCanvas,(-180,90,180,-90),scale=(SCALEX,SCALEY))
 gShpHandler = hkvc_map_esri_shapefile_shp.SHPHandler(gPltr)
 hkvc_map_esri_shapefile_shp.PLOT_POINT_ALWAYS=True
-gPlane = hkvc_plane.Plane(gPltr)
+load_map()
 gRoot.mainloop()
 
