@@ -9,7 +9,10 @@
 #
 #
 
-import cairo
+import sys
+
+if (sys.platform == 'linux'):
+	import cairo
 import turtle
 import tkinter
 import math
