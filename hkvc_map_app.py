@@ -266,7 +266,9 @@ def info():
 	print("plotTextScaleRank:{}".format(gShpHandler.plotTextScaleRank))
 	print("dataArea:{}".format(gPltr.dataArea))
 	print("plotArea:{}".format(gPltr.plotArea))
-	dREP("Try print(gPltr.__dict__)\nIf you call start(), then you may want to gRoot.after_cancel(gUpdateCB)")
+	tGlobals=globals()
+	tLocals=locals()
+	dREP("Try print(gPltr.__dict__)\nIf you call start(), then you may want to gRoot.after_cancel(gUpdateCB)", tGlobals, tLocals)
 
 def start():
 	global gPlane, gMMData, gUpdateCB
