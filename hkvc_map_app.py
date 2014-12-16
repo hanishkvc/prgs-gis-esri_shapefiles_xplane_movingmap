@@ -29,6 +29,8 @@ gUpdateCB = None
 gMMData = None
 gSimCnt = 0
 
+MODE_AUTOZOOM = False
+
 def setup_app():
 	global gRoot
 	global gCanvas
@@ -41,14 +43,16 @@ def setup_app():
 
 	btnQuit = tkinter.Button(frameMain, text="Quit", command=quit)
 	btnQuit.grid(row=2, column=0)
-	btnZoomIn = tkinter.Button(frameMain, text="ZoomIn", command=zoom_in)
-	btnZoomIn.grid(row=2, column=1)
-	btnZoomOut = tkinter.Button(frameMain, text="ZoomOut", command=zoom_out)
-	btnZoomOut.grid(row=2, column=2)
-	btnUpdate = tkinter.Button(frameMain, text="reload", command=load_map)
-	btnUpdate.grid(row=2, column=3)
 	btnStart = tkinter.Button(frameMain, text="Start", command=start)
-	btnStart.grid(row=2, column=4)
+	btnStart.grid(row=2, column=1)
+	btnZoomIn = tkinter.Button(frameMain, text="ZoomIn", command=zoom_in)
+	btnZoomIn.grid(row=1, column=2)
+	btnZoomOut = tkinter.Button(frameMain, text="ZoomOut", command=zoom_out)
+	btnZoomOut.grid(row=3, column=2)
+	btnAutoZoom = tkinter.Button(frameMain, text="AutoZoomTog", command=autozoom_toggle)
+	btnAutoZoom.grid(row=2, column=3)
+	btnUpdate = tkinter.Button(frameMain, text="reload", command=load_map)
+	btnUpdate.grid(row=2, column=4)
 
 	btnMoveTop = tkinter.Button(frameMain, text="Top", command=move_top)
 	btnMoveTop.grid(row=1, column=6)
@@ -203,8 +207,19 @@ def center_at_ifreqd(nX, nY):
 	if ((dX > hX*0.75) or (dY > hY*0.75)):
 		center_at(nX, nY)
 
+def autozoom_toggle():
+	global MODE_AUTOZOOM
+	if (MODE_AUTOZOOM):
+		MODE_AUTOZOOM=False
+	else:
+		MODE_AUTOZOOM=True
+	print("INFO: MODE_AUTOZOOM={}".format(MODE_AUTOZOOM))
+
 def auto_zoom():
 	global gSimCnt
+
+	if (MODE_AUTOZOOM == False):
+		return False
 
 	gSimCnt += 1
 	tRem = gSimCnt % 30
@@ -219,11 +234,11 @@ def auto_zoom():
 		return True
 	return False
 
-def plane_at(x, y):
+def plane_at(x, y, heading):
 	if (auto_zoom()):
 		center_at(x, y)
 	center_at_ifreqd(x, y)
-	gPlane.moved_to(x,y)
+	gPlane.moved_to(x,y,heading)
 	gPlane.draw_path()
 	gPlane.draw_plane()
 
@@ -231,7 +246,7 @@ def update_map_cb():
 	global gUpdateCB
 	global gMMData
 	if (gMMData.get_position()):
-		plane_at(gMMData.planeX, gMMData.planeY)
+		plane_at(gMMData.planeX, gMMData.planeY, gMMData.planeHeading)
 	else:
 		print("INFO: No NewData from MMData")
 	gUpdateCB = gRoot.after(5000, update_map_cb)
