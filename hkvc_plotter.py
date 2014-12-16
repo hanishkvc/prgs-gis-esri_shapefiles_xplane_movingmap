@@ -12,6 +12,7 @@
 import cairo
 import turtle
 import tkinter
+import math
 
 #
 # These PlotterClasses are setup such that by default
@@ -121,6 +122,24 @@ class PlotterGeneric:
 		else:
 			return False
 
+	def rotateXYByDeg(self, x, y, deg):
+		rad = math.radians(deg)
+		cosT = math.cos(rad)
+		sinT = math.sin(rad)
+		nx = x*cosT-y*sinT
+		ny = x*sinT+y*cosT
+		#print("DEBUG: Rotate({},{} by {}) = {},{}".format(x,y,deg,nx,ny))
+		return nx,ny
+
+	def rotateAndTranslateBy(self, polygon, deg, x, y):
+		points = list()
+		for i in polygon:
+			nx, ny = self.rotateXYByDeg(i[0],i[1],deg)
+			nx = nx+x
+			ny = ny+y
+			points.append([nx,ny])
+		print("DEBUG:rotAndTransBy: {} => {}".format(polygon,points))
+		return points
 
 class PlotterCairo(PlotterGeneric):
 
@@ -315,15 +334,16 @@ class PlotterTk(PlotterGeneric):
 		return self.cnvs.create_polygon(points, fill=self.sColor)
 
 	def polygon_noscale(self, points):
-		[x, y] = points[0]
-		nx, ny = self.dataXY2plotXY(x, y)
-		dx = x-nx
-		dy = y-ny
+		[x1, y1] = points[0]
+		nx, ny = self.dataXY2plotXY(x1, y1)
 		for i in range(0,len(points)):
 			[x, y] = points[i]
-			x = x - dx
-			y = y - dy
+			dx = x1-x
+			dy = y1-y
+			x = nx + dx
+			y = ny + dy
 			points[i] = [x,y]
+		print("polynoscale:{}".format(points))
 		return self.cnvs.create_polygon(points, fill=self.sColor)
 
 	def clear(self):
