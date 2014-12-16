@@ -29,7 +29,7 @@ class Plane():
 			y = self.y
 		if (heading == PLANE_POS_DUMMY):
 			heading = self.heading
-		points = self.pltr.rotateAndTranslateBy(self.polygon,heading,x,y)
+		points = self.pltr.rotateAndTranslateBy(self.polygon,-1*heading,x,y)
 		if (self.polygonId == None):
 			self.pltr.color(250, 0, 0)
 			self.polygonId = self.pltr.polygon_noscale(points)

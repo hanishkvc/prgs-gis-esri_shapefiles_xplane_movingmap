@@ -341,8 +341,12 @@ class PlotterTk(PlotterGeneric):
 		nx, ny = self.dataXY2plotXY(x1, y1)
 		for i in range(0,len(points)):
 			[x, y] = points[i]
-			dx = x1-x
-			dy = y1-y
+			dx = x-x1
+			if (self.xP2DRatio < 0):
+				dx = -1*dx
+			dy = y-y1
+			if (self.yP2DRatio < 0):
+				dy = -1*dy
 			x = nx + dx
 			y = ny + dy
 			points[i] = [x,y]

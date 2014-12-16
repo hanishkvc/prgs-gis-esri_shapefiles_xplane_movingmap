@@ -251,10 +251,35 @@ def update_map_cb():
 		print("INFO: No NewData from MMData")
 	gUpdateCB = gRoot.after(5000, update_map_cb)
 
+def test_plane_at():
+	for i in [[0,0],[-170,80],[-170,-80],[170,-80],[170,80]]:
+		for j in [0, 90, 180, 270, 360]:
+			print("TestPlaneAt:{} @ {}".format(i,j))
+			plane_at(i[0],i[1],j)
+			#time.sleep(10)
+			input("Check Next position...")
+
 def info():
+	bContinue = True
 	print("plotTextScaleRank:{}".format(gShpHandler.plotTextScaleRank))
 	print("dataArea:{}".format(gPltr.dataArea))
 	print("plotArea:{}".format(gPltr.plotArea))
+	print("Entering Exec Mode")
+	print("Try print(gPltr.__dict__)")
+	print("If you call start(), then you may want to gRoot.after_cancel(gUpdateCB)")
+	while bContinue:
+		try:
+			res=exec(input("?:"))
+			if (res != None):
+				print(res)
+		except KeyboardInterrupt:
+			print("Exiting Exec loop")
+			break
+		except SystemExit:
+			print("Quiting App...")
+			break
+		except:
+			print(sys.exc_info())
 
 def start():
 	global gPlane, gMMData, gUpdateCB
