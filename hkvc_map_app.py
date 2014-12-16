@@ -14,6 +14,7 @@ import tkinter
 import time
 import hkvc_plane
 import hkvc_movingmap_data
+from hkvc_debug import *
 
 gRoot = None
 gCanvas = None
@@ -126,7 +127,8 @@ def zoom_in(factor=0.2, loadMap=True):
 	dY1 -= dY
 	dX2 -= dX
 	dY2 += dY
-	debug_rect(dX1,dY1,dX2,dY2)
+	dprint(DBGLVL_VLOW, "ZoomIn:{}x{}=>{}".format(gPltr.dataArea,factor,[dX1,dY1,dX2,dY2]))
+	#debug_rect(dX1,dY1,dX2,dY2)
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 	setup_plotTextScaleRank(gPltr.dataArea)
 	if (loadMap):
@@ -140,7 +142,8 @@ def zoom_out(factor=0.3, loadMap=True):
 	dY1 += dY
 	dX2 += dX
 	dY2 -= dY
-	debug_rect(dX1,dY1,dX2,dY2)
+	dprint(DBGLVL_VLOW, "ZoomOut:{}=>{}".format(gPltr.dataArea,[dX1,dY1,dX2,dY2]))
+	#debug_rect(dX1,dY1,dX2,dY2)
 	gPltr.setup_data2plot((dX1,dY1,dX2,dY2), plotArea=gPltr.plotArea)
 	setup_plotTextScaleRank(gPltr.dataArea)
 	if (loadMap):
@@ -213,7 +216,7 @@ def autozoom_toggle():
 		MODE_AUTOZOOM=False
 	else:
 		MODE_AUTOZOOM=True
-	print("INFO: MODE_AUTOZOOM={}".format(MODE_AUTOZOOM))
+	dprint(DBGLVL_CRITICAL, "INFO: MODE_AUTOZOOM={}".format(MODE_AUTOZOOM))
 
 def auto_zoom():
 	global gSimCnt
@@ -226,11 +229,11 @@ def auto_zoom():
 	if (tRem == 0):
 		zoom_normal(False)
 		return True
-	elif (tRem == 10):
-		zoom_in(0.4, False)
+	elif (tRem == 5):
+		zoom_in(0.45, False)
 		return True
-	elif (tRem == 20):
-		zoom_in(0.4, False)
+	elif (tRem == 15):
+		zoom_in(0.45, False)
 		return True
 	return False
 
@@ -248,7 +251,7 @@ def update_map_cb():
 	if (gMMData.get_position()):
 		plane_at(gMMData.planeX, gMMData.planeY, gMMData.planeHeading)
 	else:
-		print("INFO: No NewData from MMData")
+		dprint(DBGLVL_CRITICAL, "INFO: No NewData from MMData")
 	gUpdateCB = gRoot.after(5000, update_map_cb)
 
 def test_plane_at():
@@ -260,26 +263,10 @@ def test_plane_at():
 			input("Check Next position...")
 
 def info():
-	bContinue = True
 	print("plotTextScaleRank:{}".format(gShpHandler.plotTextScaleRank))
 	print("dataArea:{}".format(gPltr.dataArea))
 	print("plotArea:{}".format(gPltr.plotArea))
-	print("Entering Exec Mode")
-	print("Try print(gPltr.__dict__)")
-	print("If you call start(), then you may want to gRoot.after_cancel(gUpdateCB)")
-	while bContinue:
-		try:
-			res=exec(input("?:"))
-			if (res != None):
-				print(res)
-		except KeyboardInterrupt:
-			print("Exiting Exec loop")
-			break
-		except SystemExit:
-			print("Quiting App...")
-			break
-		except:
-			print(sys.exc_info())
+	dREP("Try print(gPltr.__dict__)\nIf you call start(), then you may want to gRoot.after_cancel(gUpdateCB)")
 
 def start():
 	global gPlane, gMMData, gUpdateCB

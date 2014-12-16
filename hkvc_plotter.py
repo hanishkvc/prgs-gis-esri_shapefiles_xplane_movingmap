@@ -16,6 +16,7 @@ if (sys.platform == 'linux'):
 import turtle
 import tkinter
 import math
+from hkvc_debug import *
 
 #
 # These PlotterClasses are setup such that by default
@@ -54,13 +55,13 @@ class PlotterGeneric:
 			#pX2 = dX2*scaleX
 			#pY2 = dY2*scaleY
 			bUpdatePlotArea = True
-			print("INFO:plotArea: Scaling to [{}] of dataArea".format(scale))
+			dprint(DBGLVL_CRITICAL, "PltrGen:plotArea: Scaling to [{}] of dataArea".format(scale))
 		elif (plotArea == PLOTAREA_DEFAULT):
 			#(pX1, pY1, pX2, pY2) = dataArea
 			bUpdatePlotArea = True
 			scaleX = 1
 			scaleY = 1
-			print("INFO:plotArea: Mapping 1:1 to dataArea")
+			dprint(DBGLVL_CRITICAL, "PltrGen:plotArea: Mapping 1:1 to dataArea")
 
 		if (bUpdatePlotArea):
 			if (plotAreaType == PLOTAREA_TYPE_TOPLEFT):
@@ -68,17 +69,17 @@ class PlotterGeneric:
 				pY1 = 0
 				pX2 = abs(self.dXRange)*scaleX
 				pY2 = abs(self.dYRange)*scaleY
-				print("INFO:plotArea: TopLeft")
+				dprint(DBGLVL_CRITICAL, "PltrGen:plotArea: TopLeft")
 			elif (plotAreaType == PLOTAREA_TYPE_CENTER):
 				pX1 = (-1*abs(self.dXRange)/2)*scaleX
 				pY1 = (abs(self.dYRange)/2)*scaleY
 				pX2 = abs(pX1)
 				pY2 = -1*pY1
-				print("INFO:plotArea: Center")
+				dprint(DBGLVL_CRITICAL, "PltrGen:plotArea: Center")
 
 		plotArea = (pX1, pY1, pX2, pY2)
 		self.plotArea = plotArea
-		print("dataArea:[{}]\nplotArea:[{}]\n".format(dataArea, plotArea))
+		print("PltrGen:dataArea:[{}]\nplotArea:[{}]\n".format(dataArea, plotArea))
 
 		self.pXRange = pX2-pX1
 		self.pYRange = pY2-pY1
@@ -94,13 +95,13 @@ class PlotterGeneric:
 		#pX = dX*xP2DRatio+(pXMid-dXMid)
 		pX = self.pXMid+(dX-self.dXMid)*self.xP2DRatio
 		pY = self.pYMid+(dY-self.dYMid)*self.yP2DRatio
-		#print("D2P:[{},{}]=[{},{}]".format(dX,dY,pX,pY))
+		dprint(DBGLVL_VLOW, "PltrGen:D2P:[{},{}]=[{},{}]".format(dX,dY,pX,pY))
 		return pX,pY
 
 	def plotXY2dataXY(self, pX, pY):
 		dX = self.dXMid+(pX-self.pXMid)*(1.0/self.xP2DRatio)
 		dY = self.dYMid+(pY-self.pYMid)*(1.0/self.yP2DRatio)
-		print("P2D:[{},{}]=[{},{}]".format(pX,pY,dX,dY))
+		dprint(DBGLVL_VLOW, "PltrGen:P2D:[{},{}]=[{},{}]".format(pX,pY,dX,dY))
 		return dX,dY
 
 	def oneINanother_r2lt2b(self, rect1, rect2, bCheckBothWays=True):
@@ -131,7 +132,7 @@ class PlotterGeneric:
 		sinT = math.sin(rad)
 		nx = x*cosT-y*sinT
 		ny = x*sinT+y*cosT
-		#print("DEBUG: Rotate({},{} by {}) = {},{}".format(x,y,deg,nx,ny))
+		dprint(DBGLVL_VLOW, "PltrGen:Rotate({},{} by {}) = {},{}".format(x,y,deg,nx,ny))
 		return nx,ny
 
 	def rotateAndTranslateBy(self, polygon, deg, x, y):
@@ -141,7 +142,7 @@ class PlotterGeneric:
 			nx = nx+x
 			ny = ny+y
 			points.append([nx,ny])
-		print("DEBUG:rotAndTransBy: {} => {}".format(polygon,points))
+		dprint(DBGLVL_VLOW, "PltrGen:rotAndTransBy: {} => {}".format(polygon,points))
 		return points
 
 class PlotterCairo(PlotterGeneric):
@@ -298,7 +299,7 @@ class PlotterTk(PlotterGeneric):
 		return x*self.scaleX+self.transX, y*self.scaleY+self.transY
 
 	def color(self, r, g, b):
-		#print("Color:{}-{}-{} = {:02X}{:02X}{:02X}".format(r,g,b,r,g,b))
+		dprint(DBGLVL_VLOW, "PltrTk:Color:{}-{}-{} = {:02X}{:02X}{:02X}".format(r,g,b,r,g,b))
 		self.sColor = "#{:02X}{:02X}{:02X}".format(r,g,b)
 		#self.cnvs.tk_setPalette(foreground=self.sColor, background="#FFFFFF")
 		pass
@@ -350,7 +351,7 @@ class PlotterTk(PlotterGeneric):
 			x = nx + dx
 			y = ny + dy
 			points[i] = [x,y]
-		print("polynoscale:{}".format(points))
+		dprint(DBGLVL_MISC, "PltrTk:polynoscale:{}".format(points))
 		return self.cnvs.create_polygon(points, fill=self.sColor)
 
 	def clear(self):

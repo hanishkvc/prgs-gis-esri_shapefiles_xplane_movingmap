@@ -10,6 +10,7 @@ import random
 import socket
 import struct
 import threading
+from hkvc_debug import *
 
 XPLANE_IPPORT=4567
 
@@ -43,7 +44,7 @@ class MMXPlane():
 
 	def process_data_simple(self, data):
 		data = data.strip().decode()
-		print("Recvd:[{}]".format(data))
+		dprint(DBGLVL_MISC, "MMXPlane:Recvd:[{}]".format(data))
 		self.planeX += random.randint(-8,8)
 		self.planeY += random.randint(-4,4)
 
@@ -52,12 +53,12 @@ class MMXPlane():
 		iOff = 0
 		dataHdr = struct.unpack("=4sB",data[iOff:5])
 		iOff += 5
-		print("RecvdHdr:[{}]".format(dataHdr))
+		dprint(DBGLVL_MISC, "MMXPlane:RecvdHdr:[{}]".format(dataHdr))
 		while(iOff < dLen):
 			dataGrp = struct.unpack("=Iffffffff",data[iOff:iOff+36])
 			iOff += 36
 			(iID,f1,f2,f3,f4,f5,f6,f7,f8) = dataGrp
-			print("RecvdGrp:[{}]".format(dataGrp))
+			dprint(DBGLVL_MISC, "MMXPlane:RecvdGrp:[{}]".format(dataGrp))
 			if (iID == 20):
 				self.planeY = f1
 				self.planeX = f2
@@ -65,18 +66,18 @@ class MMXPlane():
 			elif (iID == 17):
 				self.planeHeading = f4
 			else:
-				print("WARN: UnKnown Data Fields Group [{}] recieved".format(iID))
+				dprint(DBGLVL_CRITICAL, "MMXPlane:WARN: UnKnown Data Fields Group [{}] recieved".format(iID))
 
 	def get_data(self):
 		pcktCnt = 0
-		print("Starting DataGathering...")
+		dprint(DBGLVL_CRITICAL, "MMXPlane:Starting DataGathering...")
 		while (self.bRun):
 			data,addr = self.sock.recvfrom(1024)
 			pcktCnt += 1
 			dLen = len(data)
 			self.process_data_xplane(data)
 			self.dataSem.release()
-		print("Stopping DataGathering...")
+		dprint(DBGLVL_CRITICAL, "MMXPlane:Stopping DataGathering...")
 
 	def get_position(self):
 		if (self.dataSem.acquire(blocking=False)):
