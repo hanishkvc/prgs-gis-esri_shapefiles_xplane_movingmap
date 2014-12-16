@@ -46,8 +46,13 @@ class MMXPlane():
 	def process_data_xplane(self, data):
 		data = struct.unpack("=4sBIffffffff",data)
 		print("Recvd:[{}]".format(data))
-		self.planeX += random.randint(-8,8)
-		self.planeY += random.randint(-4,4)
+		(sMarker,xData,iID,f1Lat,f2Lon,f3Alt,f4,f5,f6,f7,f8) = data
+		if (iID == 20):
+			self.planeY = f1Lat
+			self.planeX = f2Lon
+			self.planeAlt = f3Alt
+		else:
+			print("WARN: UnKnown Data Fields Group [{}] recieved".format(iID))
 
 	def get_data(self):
 		pcktCnt = 0
@@ -56,7 +61,7 @@ class MMXPlane():
 			data,addr = self.sock.recvfrom(1024)
 			pcktCnt += 1
 			dLen = len(data)
-			data = self.process_data_simple(data)
+			data = self.process_data_xplane(data)
 			self.dataSem.release()
 		print("Stopping DataGathering...")
 
