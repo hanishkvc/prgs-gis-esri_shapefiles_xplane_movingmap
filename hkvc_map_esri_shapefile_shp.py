@@ -80,6 +80,7 @@ class SHPHandler:
 		recIndex = 0
 		self.droppedPolygonCnt = 0
 		self.droppedPointCnt = 0
+		self.droppedPolylineCnt = 0
 		while True:
 			rHdrData = self.shpFile.read(8)
 			if (len(rHdrData) == 0):
@@ -96,8 +97,12 @@ class SHPHandler:
 			#print(SHAPETYPES[rShapeType])
 			if (rShapeType == 5):
 				self.shp_read_polygon(recIndex, rContentData)
-			if (rShapeType == 1):
+			elif (rShapeType == 1):
 				self.shp_read_point(recIndex, rContentData)
+			elif (rShapeType == 3):
+				self.shp_read_polyline(recIndex, rContentData)
+			else:
+				print("DEBUG:Unhandled ShapeType[{}]".format(rShapeType))
 			recIndex += 1
 		print("INFO: droppedPolygonCnt [{}], droppedPointCnt [{}]".format(self.droppedPolygonCnt, self.droppedPointCnt))
 
@@ -152,7 +157,7 @@ class SHPHandler:
 		polyStartPointIndexesArrayData = data[polyStartPointIndexesArrayStart:polyStartPointIndexesArrayEnd]
 		# This array contains indexes to the polyPointsArray, which specifies the 1st point of the given/current polygon
 		# The 1st point of the next polygon automatically means that the corresponding previous point is the end of the current polygon
-		polyStartPointIndexesArray = struct.unpack("<{}i".format(pNumParts), polyStartPointIndexesArrayData) 
+		polyStartPointIndexesArray = struct.unpack("<{}i".format(pNumParts), polyStartPointIndexesArrayData)
 
 		polyPointsArrayStart = polyStartPointIndexesArrayEnd
 		polyPointsArrayEnd = polyPointsArrayStart + (8*2)*pNumPoints
@@ -178,6 +183,50 @@ class SHPHandler:
 					self.plotter.stroke()
 				cPoly = cPoly+1
 				(cPointStart, cPointEnd) = self.shp_poly_startend(polyStartPointIndexesArray, cPoly, pNumParts, pNumPoints)
+			else:
+				self.plotter.line_to(cPoint[0],cPoint[1])
+
+
+	def shp_read_polyline(self, recIndex, data):
+		# Each polyline shape record contains multiple polylines whose vertices are stored serially one after the other
+		hdrPolylineData = data[0:44]
+		hdrPolyline = struct.unpack("<i4d2i",hdrPolylineData)
+		(pShapeType, pBBXMin, pBBYMin, pBBXMax, pBBYMax, pNumParts, pNumPoints) = hdrPolyline
+		#print(hdrPolyline)
+
+		if (not self.plotter.oneINanother_r2lt2b((pBBXMin, pBBYMin, pBBXMax, pBBYMax), self.plotter.dataArea)):
+			print("Dropping polyline[{}] outside dataArea[{}]".format(hdrPolyline, self.plotter.dataArea))
+			self.droppedPolylineCnt += 1
+			return
+
+		polylineStartPointIndexesArrayStart = 44
+		polylineStartPointIndexesArrayEnd = polylineStartPointIndexesArrayStart + 4*pNumParts
+		polylineStartPointIndexesArrayData = data[polylineStartPointIndexesArrayStart:polylineStartPointIndexesArrayEnd]
+		# This array contains indexes to the polylinePointsArray, which specifies the 1st point of the given/current polyline
+		# The 1st point of the next polyline automatically means that the corresponding previous point is the end of the current polyline
+		polylineStartPointIndexesArray = struct.unpack("<{}i".format(pNumParts), polylineStartPointIndexesArrayData)
+
+		polylinePointsArrayStart = polylineStartPointIndexesArrayEnd
+		polylinePointsArrayEnd = polylinePointsArrayStart + (8*2)*pNumPoints
+		if (polylinePointsArrayEnd != len(data)):
+			print("DEBUG: Something wrong with Polyline Shape record parsing, Quiting...")
+			exit()
+		polylinePointsArrayData = data[polylinePointsArrayStart:polylinePointsArrayEnd]
+
+		#NOTE: FIXED: This is a simple temp logic which ignores about multiple Polylines within a single Polyline shape record content
+		cPolyline = 0
+		(cPointStart, cPointEnd) = self.shp_poly_startend(polylineStartPointIndexesArray, cPolyline, pNumParts, pNumPoints)
+		for i in range(0,pNumPoints):
+			cPoint = struct.unpack_from("<2d", polylinePointsArrayData, i*16)
+			#print(cPoint)
+			if (i == cPointStart):
+				self.plotter.color(0,0,0)
+				self.plotter.move_to(cPoint[0],cPoint[1])
+			elif (i == cPointEnd):
+				self.plotter.line_to(cPoint[0],cPoint[1])
+				self.plotter.stroke()
+				cPolyline = cPolyline+1
+				(cPointStart, cPointEnd) = self.shp_poly_startend(polylineStartPointIndexesArray, cPolyline, pNumParts, pNumPoints)
 			else:
 				self.plotter.line_to(cPoint[0],cPoint[1])
 
