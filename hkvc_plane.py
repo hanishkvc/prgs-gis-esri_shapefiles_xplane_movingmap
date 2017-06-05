@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 #
+# Helper to draw a plane using given plotter
+# HanishKVC, 2014
+# GPL
 #
 #
 
