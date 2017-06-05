@@ -22,8 +22,8 @@ gShpHandler = None
 
 DATAWIDTH=360
 DATAHEIGHT=180
-SCALEX = 3
-SCALEY = 3
+SCALEX = 4
+SCALEY = 4
 
 gPlane = None
 gUpdateCB = None
